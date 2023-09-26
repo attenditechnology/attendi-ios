@@ -1,0 +1,51 @@
+// Options Menu
+"attendiSpeechService.optionsMenu.groups.reportingMethods.title" = "Rapportagemethodes";
+"attendiSpeechService.optionsMenu.groups.assistant.title" = "Schrijfhulp";
+
+"attendiSpeechService.optionsMenu.items.assistant.writeMyReport.title" = "Schrijf mijn rapportage";
+"attendiSpeechService.optionsMenu.items.assistant.writeMyReport.subtitle" = "Vertel wat moet worden verwerkt tot rapportage";
+
+// Reporting
+"attendiSpeechService.reporting.destroy.title" = "Raport verwijderen";
+"attendiSpeechService.reporting.destroy.message" = "U staat op het punt het raport te verwijderen. Weet u zeker dat u dit wilt doen?";
+"attendiSpeechService.reporting.destroy.stay" = "Annuleren";
+"attendiSpeechService.reporting.destroy.destroy" = "Verwijderen";
+
+// SOAP reporting
+"attendiSpeechService.SOAP.s.title" = "Subjectief";
+"attendiSpeechService.SOAP.s.symbol" = "S";
+"attendiSpeechService.SOAP.s.prompt" = "Informatie afkomsting van de cliënt zelf";
+
+"attendiSpeechService.SOAP.o.title" = "Objectief";
+"attendiSpeechService.SOAP.o.symbol" = "O";
+"attendiSpeechService.SOAP.o.prompt" = "Wat zijn jouw observaties van de situatie?";
+
+"attendiSpeechService.SOAP.a.title" = "Analyse";
+"attendiSpeechService.SOAP.a.symbol" = "A";
+"attendiSpeechService.SOAP.a.prompt" = "Wat concludeer je uit de informatie die je hebt?";
+
+"attendiSpeechService.SOAP.p.title" = "Plan";
+"attendiSpeechService.SOAP.p.symbol" = "P";
+"attendiSpeechService.SOAP.p.prompt" = "Wat zijn de vervolgstappen die je gaat nemen?";
+
+// SOEP reporting
+"attendiSpeechService.SOEP.s.title" = "Subjectief";
+"attendiSpeechService.SOEP.s.symbol" = "S";
+"attendiSpeechService.SOEP.s.prompt" = "Informatie afkomsting van de cliënt zelf";
+
+"attendiSpeechService.SOEP.o.title" = "Objectief";
+"attendiSpeechService.SOEP.o.symbol" = "O";
+"attendiSpeechService.SOEP.o.prompt" = "Wat zijn jouw observaties van de situatie?";
+
+"attendiSpeechService.SOEP.e.title" = "Evaluatie";
+"attendiSpeechService.SOEP.e.symbol" = "E";
+"attendiSpeechService.SOEP.e.prompt" = "Wat concludeer je uit de informatie die je hebt?";
+
+"attendiSpeechService.SOEP.p.title" = "Plan";
+"attendiSpeechService.SOEP.p.symbol" = "P";
+"attendiSpeechService.SOEP.p.prompt" = "Wat zijn de vervolgstappen die je gaat nemen?";
+
+// Errors
+"attendiSpeechService.errors.noPermission" = "Je hebt geen toegang gegeven tot je microfoon";
+"attendiSpeechService.errors.invalidResponse" = "Het is niet gelukt om je audio in te sturen";
+"attendiSpeechService.errors.cantStartRecording" = "Kon geen geluid opnemen. Probeer het opnieuw.";
