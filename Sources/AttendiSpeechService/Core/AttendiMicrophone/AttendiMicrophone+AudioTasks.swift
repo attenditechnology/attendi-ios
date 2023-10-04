@@ -22,7 +22,7 @@ extension AttendiMicrophone {
     ///
     /// - Returns: A function that de-registers the added task.
     @discardableResult
-    func registerAudioTask(taskId: String, task: @escaping (Data) async -> Void) -> (() -> Void) {
+    public func registerAudioTask(taskId: String, task: @escaping (Data) async -> Void) -> (() -> Void) {
         audioTasks[taskId] = task
         
         return {
@@ -32,7 +32,7 @@ extension AttendiMicrophone {
     
     /// The microphone can have multiple registered audio tasks, but only the *active* audio tasks are performed.
     /// Use this function to set a registered audio task to *active*.
-    func setActiveAudioTask(_ taskId: String) {
+    public func setActiveAudioTask(_ taskId: String) {
         // TODO: check if `taskId` exists in registered tasks.
         activeAudioTasks = Set([taskId])
         activeAudioTaskHistory.append(activeAudioTasks)
@@ -40,7 +40,7 @@ extension AttendiMicrophone {
     
     /// The microphone can have multiple registered audio tasks, but only the *active* audio tasks are performed.
     /// Use this function to set multiple registered audio task to *active*.
-    func setActiveAudioTasks(taskIds: [String]) {
+    public func setActiveAudioTasks(taskIds: [String]) {
         if activeAudioTasks == Set(taskIds) {
             print("activeAudioTasks is already set to", taskIds)
             return
@@ -51,7 +51,7 @@ extension AttendiMicrophone {
     }
     
     /// De-registers an audio task.
-    func removeAudioTask(taskToRemoveId: String) {
+    public func removeAudioTask(taskToRemoveId: String) {
         var newAudioTasks: [String: (Data) async -> Void] = [:]
         for (taskId, task) in audioTasks {
             if taskId != taskToRemoveId {
@@ -72,7 +72,7 @@ extension AttendiMicrophone {
     /// Plugins can set new audio tasks to active, but they might want to undo their actions. Since they
     /// don't necessarily have knowledge of what the previous active audio task was, they can call this method
     /// instead.
-    func goBackInActiveAudioTaskHistory() {
+    public func goBackInActiveAudioTaskHistory() {
         _  = activeAudioTaskHistory.popLast()
         if let previousActiveAudioTask = activeAudioTaskHistory.last {
             activeAudioTasks = previousActiveAudioTask
