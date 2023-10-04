@@ -12,11 +12,11 @@
 		84EFEE252A71597F00B36DAC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84EFEE242A71597F00B36DAC /* ContentView.swift */; };
 		84EFEE272A71598000B36DAC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84EFEE262A71598000B36DAC /* Assets.xcassets */; };
 		84EFEE2B2A71598000B36DAC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84EFEE2A2A71598000B36DAC /* Preview Assets.xcassets */; };
-		84EFEE362A715BED00B36DAC /* AttendiSpeechService in Resources */ = {isa = PBXBuildFile; fileRef = 84EFEE332A715B4700B36DAC /* AttendiSpeechService */; };
 		84EFEE382A715C2C00B36DAC /* AttendiSpeechService in Frameworks */ = {isa = PBXBuildFile; productRef = 84EFEE372A715C2C00B36DAC /* AttendiSpeechService */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		07EB39042ACDA32F0001C8FF /* attendi-ios */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "attendi-ios"; path = ..; sourceTree = "<group>"; };
 		843C97762A83DF7200FAEC5E /* ExampleRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleRecordingView.swift; sourceTree = "<group>"; };
 		84EFEE1F2A71597F00B36DAC /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		84EFEE222A71597F00B36DAC /* ExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleApp.swift; sourceTree = "<group>"; };
@@ -24,7 +24,6 @@
 		84EFEE262A71598000B36DAC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		84EFEE282A71598000B36DAC /* Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Example.entitlements; sourceTree = "<group>"; };
 		84EFEE2A2A71598000B36DAC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		84EFEE332A715B4700B36DAC /* AttendiSpeechService */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = AttendiSpeechService; path = ../AttendiSpeechService; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,7 +88,7 @@
 		84EFEE322A715B4700B36DAC /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				84EFEE332A715B4700B36DAC /* AttendiSpeechService */,
+				07EB39042ACDA32F0001C8FF /* attendi-ios */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -163,7 +162,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				84EFEE2B2A71598000B36DAC /* Preview Assets.xcassets in Resources */,
-				84EFEE362A715BED00B36DAC /* AttendiSpeechService in Resources */,
 				84EFEE272A71598000B36DAC /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
