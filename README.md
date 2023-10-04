@@ -12,30 +12,37 @@ The SDK is available as a `Swift` package.
 
 To utilize the Attendi Speech Service iOS package, you need to first include it as a dependency in your app.
 
-You have to option to install it manually:
+You have three options to install the dependency:
+
+*Option 1: Manual Installation*
 
 1. Clone the Repository:
-
-Clone the "AttendiSpeechService" GitHub repository to your local machine using git clone.
+- Clone the GitHub repository to your local machine using `git clone`.
 
 2. Add Package:
-
 - Go to Project Settings > Frameworks, Libraries and Embedded Content.
-- Click "+" to Add Package Dependency
-- Enter the local path to the cloned "AttendiSpeechService" repository
-- Select Package: Choose "AttendiSpeechService" from the list
+- Click "+" to Add Package Dependency.
+- Enter the local path to the cloned "AttendiSpeechService" repository.
+- Select Package: Choose "AttendiSpeechService" from the list.
+- Integration: Xcode will integrate the package from the local repository.
 
-3. Integration: Xcode will integrate the package from the local repository.
+*Option 2: URL Installation*
 
-Also, you can incorporate the client into your project by including it as a dependency in your Package.swift file, as it's distributed through Swift Package Manager: 
+- Go to Package Dependencies.
+- Enter the specific URL (https://github.com/attenditechnology/attendi-ios).
+- Select the main branch.
+
+*Option 3: Package.swift Integration*
+
+You can also incorporate the client into your project by including it as a dependency in your Package.swift file, as it's distributed through Swift Package Manager and run `swift package resolve`:
 
 ```swift
 import PackageDescription
 
 let package = Package(
-    name: "MyApp",
+    name: "MyAttendiApp",
     dependencies: [
-        .package(name: "attendispeechservice", url: "https://github.com/attenditechnology/attendi-ios.git", path: "AttendiSpeechService"),
+        .package(name: "attendispeechservice", url: "https://github.com/attenditechnology/attendi-ios.git", .branch("main")),
     ],
     targets: [
         .target(
@@ -44,9 +51,9 @@ let package = Package(
         .testTarget(
             name: "AttendiSpeechServiceTests",
             dependencies: ["MyApp"]),
+        ]
+)
 ```
-
-and run `swift package update`
 
 After installing and building the package, you can use the microphone component in your project:
 
