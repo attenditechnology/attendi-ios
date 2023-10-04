@@ -264,6 +264,8 @@ public struct AttendiMicrophone: View {
             plugins.forEach { $0.activate(self) }
         }
         .onDisappear {
+            recorder.stopRecording()
+            
             plugins.forEach { $0.deactivate(self) }
         }
     }
