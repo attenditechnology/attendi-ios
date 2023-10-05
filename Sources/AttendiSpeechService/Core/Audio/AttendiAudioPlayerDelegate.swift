@@ -36,9 +36,9 @@ public class AttendiAudioPlayerDelegate: NSObject, AVAudioPlayerDelegate {
         // We don't need to set the category if we can already playback
         if oldCategory != .playAndRecord && oldCategory != .playback {
             do {
-                try session.setCategory(.playback, options: .defaultToSpeaker)
+                try session.setCategory(.playback)
             } catch {
-                print("Setting audio session category to `playAndRecord` failed.")
+                print("Setting audio session category to `playback` failed.")
             }
         }
         
