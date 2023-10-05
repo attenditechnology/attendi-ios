@@ -397,8 +397,7 @@ public struct AttendiMicrophone: View {
                         
                         uiState = .recording
                     } catch {
-                        recorder.stopRecording()
-                        uiState = .notStartedRecording
+                        reset()
                         
                         for callback in self.callbacks.errorCallbacks.values {
                             await callback(.cantStartRecording)
@@ -537,7 +536,15 @@ public struct AttendiMicrophone: View {
     /// Show a tooltip (popover) next to the component.
     public func showTooltip(_ text: String) {
         self.tooltipText = text
-        self.tooltipVisible = true
+        
+        // Calling showTooltip causes the view to be redrawn as it triggers a state change.
+        // If the popover is currently visible, SwiftUI might dismiss it before presenting it again,
+        // causing the tooltip to disappear and reappear.
+        // We currently work around this by adding a delay before setting tooltipVisible to true.
+        // This can give SwiftUI time to finish any ongoing dismissals before presenting the popover again.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.tooltipVisible = true
+        }
     }
 }
 
