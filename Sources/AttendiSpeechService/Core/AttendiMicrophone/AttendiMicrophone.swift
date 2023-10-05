@@ -261,12 +261,53 @@ public struct AttendiMicrophone: View {
         .frame(width: width, height: size)
         .environmentObject(settings)
         .onAppear {
+            addAudioInterruptionObserver()
+            
             plugins.forEach { $0.activate(self) }
         }
         .onDisappear {
+            if let audioInterruptionObserver = audioInterruptionObserver {
+                NotificationCenter.default.removeObserver(audioInterruptionObserver)
+                self.audioInterruptionObserver = nil
+            }
+            
             recorder.stopRecording()
             
             plugins.forEach { $0.deactivate(self) }
+        }
+    }
+    
+    /// Keep track of the audio interruption observer, so that we can remove the observer when the view is dismissed.
+    @State var audioInterruptionObserver: Any?
+    
+    /// Audio interruptions occur for instance when the device receives a call, or SIri is activated.
+    /// For now, we decide to always pause recording when the interruption begins and continue recording
+    /// when the interruption is ended.
+    func addAudioInterruptionObserver() {
+        audioInterruptionObserver = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { notification in
+            handleAudioInterruption(
+                notification,
+                onInterruptionBegan: {
+                    if recorder.state == .recording {
+                        recorder.pauseRecording()
+                    }
+                },
+                onInterruptionEnded: {
+                    if recorder.state == .paused {
+                        do {
+                            try recorder.resumeRecording()
+                        } catch {
+                            for callback in callbacks.errorCallbacks.values {
+                                Task {
+                                    await callback(.general(message: "Er is iets misgegaan."))
+                                }
+                            }
+                            
+                            reset()
+                        }
+                    }
+                }
+            )
         }
     }
     
@@ -448,6 +489,13 @@ public struct AttendiMicrophone: View {
         }
     }
     
+    /// Reset to the microphone's initial state.
+    func reset() {
+        uiState = .notStartedRecording
+        recorder.clearBuffer()
+        recorder.stopRecording()
+    }
+        
     // MARK: ============= Options menu =============
     
     @State var isOptionsMenuVisible: Bool = false
@@ -776,6 +824,33 @@ struct MicrophoneProcessingRecordingView: View {
                     }
             }
         }
+    }
+}
+
+/// Convenience function to deal with audio interruptions.
+///
+/// Audio interruptions occur for instance when the device receives a call, or SIri is activated.
+/// For instance, in the microphone's ``onAppear(perform:)`` method, we register an observer for these types
+/// of interruptions. Currently we don't deal with the notification's `shouldResume` parameter.
+fileprivate func handleAudioInterruption(
+    _ notification: Notification,
+    onInterruptionBegan: (() -> Void)? = nil,
+    onInterruptionEnded: (() -> Void)? = nil
+) {
+    guard let info = notification.userInfo,
+          let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+          let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+        return
+    }
+
+    switch type {
+    case .began:
+        onInterruptionBegan?()
+
+    case .ended:
+        onInterruptionEnded?()
+
+    default: ()
     }
 }
 
