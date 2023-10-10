@@ -25,19 +25,19 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            if screen == .twoMicrophones {
-                TwoMicrophonesScreen()
-            } else {
-                HoveringMicrophoneScreen()
-            }
-            
-            Button(action: {
-                screen = (screen == .twoMicrophones) ? .hoveringMicrophone : .twoMicrophones
-            }) {
-                Text(screen == .twoMicrophones ? "Vul SOAP in" : "Ga terug")
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 10)
+           if screen == .twoMicrophones {
+               TwoMicrophonesScreen()
+           } else {
+               HoveringMicrophoneScreen()
+           }
+
+           Button(action: {
+               screen = (screen == .twoMicrophones) ? .hoveringMicrophone : .twoMicrophones
+           }) {
+               Text(screen == .twoMicrophones ? "Vul SOAP in" : "Ga terug")
+           }
+           .padding(.horizontal, 16)
+           .padding(.bottom, 10)
         }
     }
 }
@@ -125,6 +125,22 @@ struct TwoMicrophonesScreen: View {
     }
 }
 
+// Add `if` view extension to conditionally apply a modifier to a view
+extension View {
+    /// Applies the given transform if the given condition evaluates to `true`.
+    /// - Parameters:
+    ///   - condition: The condition to evaluate.
+    ///   - transform: The transform to apply to the source `View`.
+    /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
+    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+        if condition() {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
 struct HoveringMicrophoneScreen: View {
     @State private var text1: String = ""
     @State private var text2: String = ""
@@ -132,7 +148,16 @@ struct HoveringMicrophoneScreen: View {
     @State private var text4: String = ""
     @State private var focusedTextField: Int = 0
     
+    @State var microphoneUIState: AttendiMicrophone.UIState? = nil
+    
+    func shouldDisplayMicrophoneTarget(textField: Int, targetTextField: Int) -> Bool {
+        return ((microphoneUIState == .recording || microphoneUIState == .processingRecording)
+                && targetTextField == textField)
+    }
+
     var body: some View {
+        let targetTextField = focusedTextField == 0 ? 1 : focusedTextField
+        
         ZStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -140,12 +165,29 @@ struct HoveringMicrophoneScreen: View {
                     
                     Text("S:")
                     CustomTextField(text: $text1, focusedField: $focusedTextField, tag: 1)
+                        .if(shouldDisplayMicrophoneTarget(textField: 1, targetTextField: targetTextField)) { view in
+                            view.border(Color.red)
+                        }
+                    if (shouldDisplayMicrophoneTarget(textField: 1, targetTextField: targetTextField)) {
+                        Text("Aan het opnemen...")
+                            .font(.footnote)
+                    }
+                    
                     Text("O:")
                     CustomTextField(text: $text2, focusedField: $focusedTextField, tag: 2)
+                        .if(shouldDisplayMicrophoneTarget(textField: 2, targetTextField: targetTextField)) { view in
+                            view.border(Color.red)
+                        }
                     Text("A:")
                     CustomTextField(text: $text3, focusedField: $focusedTextField, tag: 3)
+                        .if(shouldDisplayMicrophoneTarget(textField: 3, targetTextField: targetTextField)) { view in
+                            view.border(Color.red)
+                        }
                     Text("P:")
                     CustomTextField(text: $text4, focusedField: $focusedTextField, tag: 4)
+                        .if(shouldDisplayMicrophoneTarget(textField: 4, targetTextField: targetTextField)) { view in
+                            view.border(Color.red)
+                        }
                 }
                 .padding(16)
                 .frame(maxHeight: .infinity)
@@ -173,6 +215,10 @@ struct HoveringMicrophoneScreen: View {
                                 text4 = text
                             default:
                                 text1 = text
+                        }
+                    } onAppear: { mic in
+                        mic.callbacks.onUIState { uiState in
+                            self.microphoneUIState = uiState
                         }
                     }
                     .background(Color.white.clipShape(Circle()))
