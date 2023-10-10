@@ -14,25 +14,27 @@ To utilize the Attendi Speech Service iOS package, you need to first include it 
 
 You have three options to install the dependency:
 
-*Option 1: Manual Installation*
+_Option 1: Manual Installation_
 
 1. Clone the Repository:
+
 - Clone the GitHub repository to your local machine using `git clone`.
 
 2. Add Package:
+
 - Go to Project Settings > Frameworks, Libraries and Embedded Content.
 - Click "+" to Add Package Dependency.
 - Enter the local path to the cloned "AttendiSpeechService" repository.
 - Select Package: Choose "AttendiSpeechService" from the list.
 - Integration: Xcode will integrate the package from the local repository.
 
-*Option 2: URL Installation*
+_Option 2: URL Installation_
 
 - Go to Package Dependencies.
 - Enter the specific URL (https://github.com/attenditechnology/attendi-ios).
 - Select the main branch.
 
-*Option 3: Package.swift Integration*
+_Option 3: Package.swift Integration_
 
 You can also incorporate the client into your project by including it as a dependency in your Package.swift file, as it's distributed through Swift Package Manager and run `swift package resolve`:
 
@@ -88,9 +90,27 @@ For more details on the `AttendiMicrophone`'s API, see its Swift documentation.
 
 ## Communicating with the `AttendiMicrophone` component
 
-The `AttendiMicrophone` exposes two callbacks in its initializer: `onEvent` and `onResult`. The `onResult` callback can be called by plugins when they want to signal a result to the client when that result is in text (string) form. As seen in the example above, the text can be accessed by the client by providing a closure to the `onResult` parameter.
+The `AttendiMicrophone` exposes three callbacks in its initializer: `onEvent`, `onResult`, and `onAppear`. The `onResult` callback can be called by plugins when they want to signal a result to the client when that result is in text (string) form. As seen in the example above, the text can be accessed by the client by providing a closure to the `onResult` parameter.
 
 The `onEvent` callback can be called by plugins when they want to signal a more general event to the client. Plugins can call `onEvent` and pass it an event name and a result object. The client can then listen for these events by providing a closure to the `onEvent` parameter. The client can then check the event name and the result object to determine what to do.
+
+The `onAppear` callback is useful when wanting to add some functionality to the microphone component at the callsite. Since passing the closure captures the variables in the view, the calling code can for instance save the microphone's UI state in a variable by using the microphone's plugin APIs at the callsite. For example, the following code saves the microphone's UI state in a variable called `micState`:
+
+```swift
+// within some SwiftUI view
+
+// Use this e.g. to change your UI based on the microphone's UI state.
+@State var microphoneUIState: AttendiMicrophone.UIState? = nil
+
+AttendiMicrophone(
+    // ...
+    onAppear: { mic in
+        mic.callbacks.onUIState { uiState in
+            self.microphoneUIState = uiState
+        }
+    }
+)
+```
 
 ## Styling
 

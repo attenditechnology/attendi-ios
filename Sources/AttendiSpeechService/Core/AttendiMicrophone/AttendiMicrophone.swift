@@ -170,6 +170,10 @@ public struct AttendiMicrophone: View {
     /// to return results.
     let onResult: (String) -> Void
     
+    /// Used to give the client access to the microphone object at the callsite. This is useful when wanting to call plugin APIs directly
+    /// at the callsite. This can for instance be used to create a listener on the UI state of the component at the call site.
+    let onAppear: (AttendiMicrophone) -> Void
+    
     /// - Parameter microphoneModifier: Use this to change certain aspects of the microphone's appearance.
     /// To see what properties can be changed, see ``AttendiMicrophoneModifier``.
     /// - Parameter plugins: Functionality can be added to this component through a plugin system.
@@ -186,13 +190,17 @@ public struct AttendiMicrophone: View {
     /// caller. This can be useful when the result is not just a string, but an arbitrary
     /// data structure. The caller can branch on the event name to handle the event(s) it
     /// cares about.
+    /// - Parameter onAppear: Used to give the client access to the microphone object at the callsite. This is useful when wanting to
+    /// call plugin APIs directly at the callsite. This can for instance be used to create a listener on the UI state of the component at the component's
+    /// callsite.
     public init(
         microphoneModifier: AttendiMicrophoneModifier = AttendiMicrophoneModifier(),
         showOptions: Bool = false,
         plugins: [AttendiMicrophonePlugin] = [],
         silent: Bool = false,
         onResult: @escaping (String) -> Void = { _ in},
-        onEvent: @escaping (String, Any) -> Void = { _, _ in }
+        onEvent: @escaping (String, Any) -> Void = { _, _ in },
+        onAppear: @escaping (AttendiMicrophone) -> Void = { _ in }
     ) {
         self._settings = StateObject(wrappedValue: Settings(
             color: microphoneModifier.color,
@@ -210,6 +218,7 @@ public struct AttendiMicrophone: View {
         
         self.onEvent = onEvent
         self.onResult = onResult
+        self.onAppear = onAppear
     }
     
     public var body: some View {
@@ -264,6 +273,8 @@ public struct AttendiMicrophone: View {
             addAudioInterruptionObserver()
             
             plugins.forEach { $0.activate(self) }
+            
+            self.onAppear(self)
         }
         .onDisappear {
             if let audioInterruptionObserver = audioInterruptionObserver {
