@@ -42,9 +42,7 @@ public class AttendiTranscribePlugin: AttendiMicrophonePlugin {
                 mic.onEvent("attendi-transcribe", transcript)
                 mic.onResult(transcript)
             case .failure(let error):
-                for callback in mic.callbacks.errorCallbacks.values {
-                    await callback(.general(message: "Kon de audio niet opsturen"))
-                }
+                await mic.triggerError(.general(message: "Kon de audio niet opsturen"))
                 print("Error: \(error)")
             }
         }

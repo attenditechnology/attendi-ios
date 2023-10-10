@@ -35,9 +35,7 @@ final public class AttendiAssistantPlugin: AttendiMicrophonePlugin {
                 mic.onResult(transcript)
                 self.goBackToNormalState(mic)
             case .failure(let error):
-                for callback in mic.callbacks.errorCallbacks.values {
-                    await callback(.general(message: "Kon de audio niet opsturen"))
-                }
+                await mic.triggerError(.general(message: "Kon de audio niet opsturen"))
                 print("Error: \(error)")
             }
         }
