@@ -297,12 +297,10 @@ public struct AttendiMicrophone: View {
                         do {
                             try recorder.resumeRecording()
                         } catch {
-                            for callback in callbacks.errorCallbacks.values {
-                                Task {
-                                    await callback(.general(message: "Er is iets misgegaan."))
-                                }
+                            Task {
+                                await triggerError(.general(message: "Er is iets misgegaan."))
                             }
-                            
+
                             reset()
                         }
                     }
@@ -365,12 +363,9 @@ public struct AttendiMicrophone: View {
         requestMicrophonePermission { allowed in
             if !allowed {
                 Task {
-                    do {
-                        for callback in self.callbacks.errorCallbacks.values {
-                            await callback(.noPermission)
-                        }
-                    }
+                    await triggerError(.noPermission)
                 }
+                
                 return
             }
             
@@ -399,9 +394,7 @@ public struct AttendiMicrophone: View {
                     } catch {
                         reset()
                         
-                        for callback in self.callbacks.errorCallbacks.values {
-                            await callback(.cantStartRecording)
-                        }
+                        await triggerError(.cantStartRecording)
                     }
                 }
             }
@@ -494,7 +487,15 @@ public struct AttendiMicrophone: View {
         recorder.clearBuffer()
         recorder.stopRecording()
     }
-        
+    
+    /// [PLUGIN API]
+    /// Trigger an error by calling all registered error callbacks.
+    public func triggerError(_ error: AttendiMicrophone.Errors) async {
+        for callback in self.callbacks.errorCallbacks.values {
+            await callback(error)
+        }
+    }
+
     // MARK: ============= Options menu =============
     
     @State var isOptionsMenuVisible: Bool = false
