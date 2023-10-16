@@ -9,7 +9,7 @@ import SwiftUI
 final public class AttendiAssistantPlugin: AttendiMicrophonePlugin {
     let defaultAssistantColor = Color(hex: "#9747FF")
     
-    var previousColor = Color(hex: "#1C69E8")
+    var previousColor = AttendiMicrophone.Colors(baseColor: Color(hex: "#1C69E8"))
     var previousOptionsIcon: AnyView? = nil
     var previousShowOptions: AttendiMicrophone.OptionsVariant = .normal
     
@@ -57,7 +57,7 @@ final public class AttendiAssistantPlugin: AttendiMicrophonePlugin {
                 icon: Image("assistantWriteMyReport", bundle: .module),
                 action: .button(action: {
                     Task { @MainActor in
-                        self.previousColor = mic.settings.color
+                        self.previousColor = mic.settings.colors
                         self.previousOptionsIcon = mic.settings.customUIIcons["options"]
                         self.previousShowOptions = mic.settings.showOptions
                         
@@ -65,7 +65,7 @@ final public class AttendiAssistantPlugin: AttendiMicrophonePlugin {
                         
                         mic.settings.showOptions = .always
                         
-                        mic.settings.color = color
+                        mic.settings.colors = AttendiMicrophone.Colors(baseColor: color)
                         
                         mic.setOptionsIcon(AnyView(
                             Button(action: {self.goBackToNormalState(mic)} ) {
@@ -91,7 +91,7 @@ final public class AttendiAssistantPlugin: AttendiMicrophonePlugin {
     
     @MainActor private func goBackToNormalState(_ mic: AttendiMicrophone) {
         mic.goBackInActiveAudioTaskHistory()
-        mic.settings.color = self.previousColor
+        mic.settings.colors = self.previousColor
         mic.setOptionsIcon(self.previousOptionsIcon)
         mic.showOptions(self.previousShowOptions)
     }

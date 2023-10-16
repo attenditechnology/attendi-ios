@@ -25,6 +25,11 @@ extension View {
         ModifiedContent(content: self, modifier: CornerRadiusStyle(radius: radius, corners: corners))
     }
     
+    /// Clip to circle if `radius` is `nil`, otherwise use the specified corner radius.
+    func conditionalCornerRadius(_ radius: Double?) -> some View {
+        self.modifier(ConditionalCornerRadius(cornerRadius: radius))
+    }
+
     /// Listen to device rotations.
     func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
         self.modifier(DeviceRotationViewModifier(action: action))
@@ -42,5 +47,17 @@ struct DeviceRotationViewModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
                 action(UIDevice.current.orientation)
             }
+    }
+}
+
+struct ConditionalCornerRadius: ViewModifier {
+    var cornerRadius: Double?
+
+    func body(content: Content) -> some View {
+        if let radius = cornerRadius {
+            return AnyView(content.cornerRadius(radius))
+        } else {
+            return AnyView(content.clipShape(Circle()))
+        }
     }
 }

@@ -38,7 +38,16 @@ let defaultMicrophoneColor = Color(hex: "#1C69E8")
 /// - Example:
 /// ```swift
 /// AttendiMicrophone(
-///     microphoneModifier: AttendiMicrophoneModifier(size: 56, color: Color.red),
+///     size: 56,
+///     // specify detailed color theme
+///     colors: AttendiMicrophone.Colors(
+///         inactiveBackgroundColor: pinkColor,
+///         inactiveForegroundColor: Color.white,
+///         activeBackgroundColor: pinkColor,
+///         activeForegroundColor: Color.white
+///     ),
+///     // or create a color theme from one color
+///     // colors: AttendiMicrophone.Colors(baseColor: Color.Red),
 ///     plugins: [
 ///         AttendiErrorPlugin(),
 ///         AttendiTranscribePlugin(apiConfig: apiConfig)
@@ -77,28 +86,25 @@ public struct AttendiMicrophone: View {
     
     class Settings: ObservableObject {
         public init(
-            color: Color? = nil,
-            showOptions: AttendiMicrophone.OptionsVariant? = nil,
             size: Double? = nil,
+            colors: Colors? = nil,
             cornerRadius: Double? = nil,
-            variant: AttendiMicrophone.Variant? = nil,
+            showOptions: AttendiMicrophone.OptionsVariant? = nil,
             silent: Bool? = nil,
             customUIIcons: [String : AnyView]? = nil
         ) {
-            self.color = color ?? defaultMicrophoneColor
-            self.showOptions = showOptions ?? .hidden
             self.size = size ?? 56
-            self.cornerRadius = cornerRadius ?? 1000
-            self.variant = variant ?? .normal
+            self.colors = colors ?? Colors(baseColor: Color(red: 28/255, green: 105/255, blue: 232/255))
+            self.cornerRadius = cornerRadius
+            self.showOptions = showOptions ?? .hidden
             self.silent = silent ?? false
             self.customUIIcons = customUIIcons ?? [:]
         }
         
-        @Published var color: Color
+        @Published var colors: Colors
         @Published var showOptions: AttendiMicrophone.OptionsVariant
         @Published var size: Double
-        @Published var cornerRadius: Double
-        @Published var variant: AttendiMicrophone.Variant
+        @Published var cornerRadius: Double?
         @Published var silent: Bool
         // TODO: remove `customUIIcons` -> make into plugin API
         @Published var customUIIcons: [String: AnyView]
@@ -174,8 +180,43 @@ public struct AttendiMicrophone: View {
     /// at the callsite. This can for instance be used to create a listener on the UI state of the component at the call site.
     let onAppear: (AttendiMicrophone) -> Void
     
-    /// - Parameter microphoneModifier: Use this to change certain aspects of the microphone's appearance.
-    /// To see what properties can be changed, see ``AttendiMicrophoneModifier``.
+    /// Stores all the color information the microphone needs.
+    ///
+    /// The microphone is considered `active` when the microphone's
+    /// ui state is either ``AttendiMicrophone/UIState-swift.enum/recording`` or
+    /// ``AttendiMicrophone/UIState-swift.enum/processingRecording``.
+    public struct Colors {
+        let inactiveBackgroundColor: Color
+        let inactiveForegroundColor: Color
+        let activeBackgroundColor: Color
+        let activeForegroundColor: Color
+        
+        public init(inactiveBackgroundColor: Color, inactiveForegroundColor: Color, activeBackgroundColor: Color, activeForegroundColor: Color) {
+            self.inactiveBackgroundColor = inactiveBackgroundColor
+            self.inactiveForegroundColor = inactiveForegroundColor
+            self.activeBackgroundColor = activeBackgroundColor
+            self.activeForegroundColor = activeForegroundColor
+        }
+        
+        /// Initialize the theme from a single color.
+        public init(baseColor: Color) {
+            self.init(
+                inactiveBackgroundColor: Color.white.opacity(0),
+                inactiveForegroundColor: baseColor,
+                activeBackgroundColor: baseColor,
+                activeForegroundColor: Color.white
+            )
+        }
+    }
+    
+    /// - Parameter size: Sets the width and height of the microphone.
+    /// - Parameter colors: Instance of ``AttendiMicrophone/Colors``, used to control the color theming of
+    /// the component. The color can depend on whether the microphone is `active`, which currently means that the microphone's
+    /// ui state is either ``AttendiMicrophone/UIState-swift.enum/recording`` or
+    /// ``AttendiMicrophone/UIState-swift.enum/processingRecording``. There are multiple ways to create an instance
+    /// of ``AttendiMicrophone/Colors``, see its docs for futher information.
+    /// - Parameter cornerRadius: If not set, the component will have a circular shape. Otherwise, uses a rounded corner shape with this
+    /// corner radius.
     /// - Parameter plugins: Functionality can be added to this component through a plugin system.
     /// See the ``AttendiMicrophonePlugin`` interface for more information.
     /// - Parameter silent: By default, the component will play a sound when the recording is
@@ -194,7 +235,9 @@ public struct AttendiMicrophone: View {
     /// call plugin APIs directly at the callsite. This can for instance be used to create a listener on the UI state of the component at the component's
     /// callsite.
     public init(
-        microphoneModifier: AttendiMicrophoneModifier = AttendiMicrophoneModifier(),
+        size: Double = 56,
+        colors: Colors = Colors(baseColor: Color(red: 28/255, green: 105/255, blue: 232/255)),
+        cornerRadius: Double? = nil,
         showOptions: Bool = false,
         plugins: [AttendiMicrophonePlugin] = [],
         silent: Bool = false,
@@ -203,10 +246,10 @@ public struct AttendiMicrophone: View {
         onAppear: @escaping (AttendiMicrophone) -> Void = { _ in }
     ) {
         self._settings = StateObject(wrappedValue: Settings(
-            color: microphoneModifier.color,
-            showOptions: showOptions ? .normal : .hidden,
-            size: microphoneModifier.size,
-            cornerRadius: microphoneModifier.cornerRadius
+            size: size,
+            colors: colors,
+            cornerRadius: cornerRadius,
+            showOptions: showOptions ? .normal : .hidden
         ))
         
         let defaultPlugins = [AudioNotificationPlugin(), VolumeFeedbackPlugin()]
@@ -228,11 +271,13 @@ public struct AttendiMicrophone: View {
         
         let width = size + (showOptions ? size : 0)
         
-        ZStack {
+        return ZStack {
             // Show a border around the component if showOptions is true
             if showOptions {
-                RoundedRectangle(cornerRadius: self.settings.cornerRadius)
-                    .stroke(self.settings.color)
+                // TODO: ?? 1000 kind of hacky, make this work more naturally
+                RoundedRectangle(cornerRadius: self.settings.cornerRadius ?? 1000)
+                    // TODO: base color on settings.colors
+                    .stroke(Color.black)
             }
             
             HStack(spacing: 0) {
@@ -253,7 +298,8 @@ public struct AttendiMicrophone: View {
                 if showOptions {
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(self.settings.color)
+                            // TODO: create color for border in AttendiMicrophone.Colors
+                            .fill(self.settings.colors.activeBackgroundColor)
                             .padding(.top, size * 0.2)
                             .padding(.bottom, size * 0.2)
                             .frame(width: 1, alignment: .leading)
@@ -480,14 +526,14 @@ public struct AttendiMicrophone: View {
     private func getOptionsView(size: Double) -> some View {
         if let possibleCustomView = settings.customUIIcons["options"] {
             possibleCustomView
-                .foregroundColor(settings.color)
+                .foregroundColor(settings.colors.inactiveForegroundColor)
                 .padding(8)
                 .frame(width: size, height: size)
         } else {
             Image(systemName: "chevron.down")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .foregroundColor(settings.color)
+                .foregroundColor(settings.colors.inactiveForegroundColor)
                 .frame(width: size * 0.35, height: size * 0.35)
         }
     }
@@ -560,27 +606,6 @@ public struct AttendiMicrophone: View {
     }
 }
 
-/**
- * Used to change aspects of the microphone's appearance.
- */
-public struct AttendiMicrophoneModifier {
-    public init(size: Double? = nil, color: Color? = nil, cornerRadius: Double? = nil) {
-        self.size = size
-        self.color = color
-        self.cornerRadius = cornerRadius
-    }
-    
-    /// The main color of the microphone.
-    public let color: Color?
-    
-    /// Sets the width and height of the microphone. If showOptions is false, the width and height
-    /// will be equal. If showOptions is true, the width will be twice the height.
-    public let size: Double?
-    
-    /// Sets the corner radius of the microphone. If not set, the button will have a circular shape.
-    public let cornerRadius: Double?
-}
-
 struct AttendiMicrophoneButton_Previews: PreviewProvider {
     @State static var text: String = ""
     
@@ -605,22 +630,16 @@ struct AttendiMicrophoneButton_Previews: PreviewProvider {
 struct MicrophoneNotStartedRecordingView: View {
     @EnvironmentObject var settings: AttendiMicrophone.Settings
     
-    func foregroundColor() -> Color {
-        switch settings.variant {
-        case .white: return .white
-        case .normal: return settings.color
-        case .transparent: return settings.color
-        }
-    }
-    
     var body: some View {
         GeometryReader { geometry in
             Image("microphone", bundle: .module)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .foregroundColor(foregroundColor())
+                .foregroundColor(settings.colors.inactiveForegroundColor)
                 .frame(width: geometry.size.width * 0.5)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .background(settings.colors.inactiveBackgroundColor)
+                .conditionalCornerRadius(settings.cornerRadius)
         }
     }
 }
@@ -637,29 +656,13 @@ struct MicrophoneLoadingBeforeRecordingView: View {
     @EnvironmentObject var settings: AttendiMicrophone.Settings
     @State private var rotation = 0.0
     
-    func backgroundColor() -> Color {
-        switch settings.variant {
-        case .white: return Color.clear
-        case .normal: return settings.color
-        case .transparent: return Color.clear
-        }
-    }
-    
-    func foregroundColor() -> Color {
-        switch settings.variant {
-        case .white: return .white
-        case .normal: return settings.color
-        case .transparent: return settings.color
-        }
-    }
-    
     var body: some View {
         let showOptions = settings.showOptions == .always || settings.showOptions == .normal
         
         ZStack {
             if showOptions {
                 Rectangle()
-                    .fill(backgroundColor())
+                    .fill(settings.colors.inactiveBackgroundColor)
                     .opacity(0.2)
                     .frame(width: ATTENDI_BUTTON_SIZE, height: ATTENDI_BUTTON_SIZE)
 //                    .cornerRadius(settings.cornerRadius, corners: [.topLeft, .bottomLeft])
@@ -674,16 +677,18 @@ struct MicrophoneLoadingBeforeRecordingView: View {
         if let possibleCustomView = settings.customUIIcons[AttendiMicrophone.UIState.loadingBeforeRecording.rawValue] {
             possibleCustomView
                 .padding(8)
-                .foregroundColor(foregroundColor())
+                .foregroundColor(settings.colors.inactiveForegroundColor)
         } else {
             GeometryReader { geometry in
                 Image("attendiLogo", bundle: .module)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .foregroundColor(foregroundColor())
+                    .foregroundColor(settings.colors.inactiveForegroundColor)
                     .rotationEffect(.degrees(rotation))
                     .frame(width: geometry.size.width * 0.35)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .background(settings.colors.inactiveBackgroundColor)
+                    .conditionalCornerRadius(settings.cornerRadius)
                     .onAppear {
                         withAnimation(
                             .timingCurve(0.715, 0.15, 0.175, 0.84, duration: 0.8)
@@ -710,27 +715,10 @@ struct MicrophoneRecordingView: View {
     
     @State var activeListeners: Array<(() -> Void)> = []
     
-    func backgroundColor() -> Color {
-        switch settings.variant {
-        case .white: return Color.clear
-        case .normal: return settings.color
-        case .transparent: return Color.clear
-        }
-    }
-    
-    func foregroundColor() -> Color {
-        switch settings.variant {
-        case .white: return .white
-        case .normal: return .white
-        case .transparent: return settings.color
-        }
-    }
-    
     var body: some View {
         let showOptions = settings.showOptions == .always
         
         let view = getView()
-            .background(backgroundColor().ignoresSafeArea())
         
         // If showOptions is true, we need to have control over the different corners' corner
         // radii. However, using our own cornerRadius modifier doesn't result in a perfect circle,
@@ -738,11 +726,12 @@ struct MicrophoneRecordingView: View {
         // modifier when `showOptions` is false.
         if showOptions {
             return AnyView(view
-                .cornerRadius(settings.cornerRadius, corners: [.topLeft, .bottomLeft])
+                // TODO: ?? 1000 is a hack now, make this work more naturally
+                .cornerRadius(settings.cornerRadius ?? 1000, corners: [.topLeft, .bottomLeft])
                 .cornerRadius(0 , corners: [.topRight, .bottomRight])
             )
         } else {
-            return AnyView(view.cornerRadius(settings.cornerRadius))
+            return AnyView(view.conditionalCornerRadius(settings.cornerRadius))
         }
     }
     
@@ -750,23 +739,23 @@ struct MicrophoneRecordingView: View {
     private func getView() -> some View {
         if let possibleCustomView = settings.customUIIcons[AttendiMicrophone.UIState.recording.rawValue] {
             possibleCustomView
-                .foregroundColor(foregroundColor())
+                .foregroundColor(settings.colors.activeForegroundColor)
         } else {
             GeometryReader { geometry in
                 ZStack(alignment: .bottom) {
                     Image("microphone", bundle: .module)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .foregroundColor(foregroundColor())
                         .frame(width: geometry.size.width * 0.5)
                     
                     RoundedRectangle(cornerRadius: 4)
-                        .foregroundColor(foregroundColor())
                         .frame(width: geometry.size.width * 0.18, height: geometry.size.height * 0.24 * max(min(animatedMicrophoneFillLevel, 1), 0))
                         .animation(.linear(duration: 0.08))
                         .padding(.bottom, geometry.size.height * 0.19)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .foregroundColor(settings.colors.activeForegroundColor)
+                .background(settings.colors.activeBackgroundColor)
             }
         }
     }
@@ -786,22 +775,6 @@ struct MicrophoneProcessingRecordingView: View {
     @EnvironmentObject var settings: AttendiMicrophone.Settings
     @State private var scales: [CGFloat] = [0.1, 0.1, 0.1, 0.1, 0.1]
     
-    func backgroundColor() -> Color {
-        switch settings.variant {
-        case .white: return Color.clear
-        case .normal: return settings.color
-        case .transparent: return Color.clear
-        }
-    }
-    
-    func foregroundColor() -> Color {
-        switch settings.variant {
-        case .white: return .white
-        case .normal: return .white
-        case .transparent: return settings.color
-        }
-    }
-    
     var body: some View {
         let showOptions = settings.showOptions == .always
         
@@ -811,15 +784,16 @@ struct MicrophoneProcessingRecordingView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-            .background(backgroundColor().ignoresSafeArea())
+            .background(settings.colors.activeBackgroundColor.ignoresSafeArea())
         
         if showOptions {
             return AnyView(view
-                .cornerRadius(settings.cornerRadius, corners: [.topLeft, .bottomLeft])
+                // TODO: ?? 1000 is a hack now, make this work more naturally
+                .cornerRadius(settings.cornerRadius ?? 1000, corners: [.topLeft, .bottomLeft])
                 .cornerRadius(0 , corners: [.topRight, .bottomRight])
             )
         } else {
-            return AnyView(view.cornerRadius(settings.cornerRadius)
+            return AnyView(view.conditionalCornerRadius(settings.cornerRadius)
             )
         }
     }
@@ -828,11 +802,11 @@ struct MicrophoneProcessingRecordingView: View {
     private func getView(parentSize: CGSize) -> some View {
         if let possibleCustomView = settings.customUIIcons[AttendiMicrophone.UIState.processingRecording.rawValue] {
             possibleCustomView
-                .foregroundColor(foregroundColor())
+                .foregroundColor(settings.colors.activeForegroundColor)
         } else {
             ForEach(0..<5) { index in
                 Rectangle()
-                    .fill(foregroundColor())
+                    .fill(settings.colors.activeForegroundColor)
                     .frame(width: parentSize.width * 0.05, height: parentSize.height * 0.5)
                     .scaleEffect(y: scales[index])
                     .animation(Animation.easeInOut(duration: 0.8).repeatForever().delay(0.1 * Double(index)))

@@ -65,9 +65,22 @@ import AttendiSpeechService
 // within some SwiftUI view
 
 AttendiMicrophone(
-    // Change aspects of the microphone's appearance, such as size and color,
-    // using the `microphoneModifier` parameter
-    microphoneModifier: AttendiMicrophoneModifier(size: 56, color: Color.red),
+    // Sets the width and height of the microphone.
+    size: 60,
+    // Specify detailed color theme. The mic is considered active when it is recording
+    // or processing.
+    colors: AttendiMicrophone.Colors(
+        inactiveBackgroundColor: pinkColor,
+        inactiveForegroundColor: Color.white,
+        activeBackgroundColor: pinkColor,
+        activeForegroundColor: Color.white
+    ),
+    // or create a color theme from one color
+    // colors: AttendiMicrophone.Colors(baseColor: Color.Red),
+    //
+    // If not set, the component will have a circular shape. Otherwise, uses a
+    // rounded corner shape with this corner radius.
+    cornerRadius: 20,
     // Add plugins if necessary. These extend the functionality of the microphone component.
     plugins: [
         // Tells microphone what to do when an error occurs.
@@ -104,17 +117,13 @@ The `onAppear` callback is useful when wanting to add some functionality to the 
 
 AttendiMicrophone(
     // ...
+)
     onAppear: { mic in
         mic.callbacks.onUIState { uiState in
             self.microphoneUIState = uiState
         }
     }
-)
 ```
-
-## Styling
-
-The microphone component can be styled using the `microphoneModifier` parameter. See the `AttendiMicrophoneModifier`'s Swift documentation for more details.
 
 ## Creating a plugin
 
