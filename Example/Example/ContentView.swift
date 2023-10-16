@@ -77,7 +77,8 @@ struct TwoMicrophonesScreen: View {
                         .frame(height: 36)
                     
                     AttendiMicrophone(
-                        microphoneModifier: AttendiMicrophoneModifier(size: 56, color: pinkColor),
+                        size: 56,
+                        colors: AttendiMicrophone.Colors(baseColor: pinkColor),
                         plugins: [
                             AttendiErrorPlugin(),
                             AttendiTranscribePlugin(apiConfig: apiConfig),
@@ -102,7 +103,8 @@ struct TwoMicrophonesScreen: View {
                     
                     HStack {
                         AttendiMicrophone(
-                            microphoneModifier: AttendiMicrophoneModifier(size: 56, color: pinkColor),
+                            size: 56,
+                            colors: AttendiMicrophone.Colors(baseColor: pinkColor),
                             plugins: [
                                 AttendiErrorPlugin(),
                                 AttendiTranscribePlugin(apiConfig: apiConfig),
@@ -198,7 +200,13 @@ struct HoveringMicrophoneScreen: View {
                 HStack {
                     Spacer()
                     AttendiMicrophone(
-                        microphoneModifier: AttendiMicrophoneModifier(size: 64, color: pinkColor),
+                        size: 64,
+                        colors: AttendiMicrophone.Colors(
+                            inactiveBackgroundColor: pinkColor,
+                            inactiveForegroundColor: Color.white,
+                            activeBackgroundColor: pinkColor,
+                            activeForegroundColor: Color.white
+                        ),
                         plugins: [
                             AttendiErrorPlugin(),
                             AttendiTranscribePlugin(apiConfig: apiConfig),
@@ -221,8 +229,6 @@ struct HoveringMicrophoneScreen: View {
                             self.microphoneUIState = uiState
                         }
                     }
-                    .background(Color.white.clipShape(Circle()))
-                    .overlay(Circle().stroke(pinkColor))
                     .padding(16)
                 }
             }

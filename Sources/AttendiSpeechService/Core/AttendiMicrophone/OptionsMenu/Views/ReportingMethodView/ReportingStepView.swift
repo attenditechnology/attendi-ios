@@ -27,13 +27,13 @@ struct ReportingStepView: View {
         Text(step)
             .font(.title)
             .frame(width: 60, height: 60)
-            .background(hasValue ? settings.color.opacity(0.1) : .clear)
+//            .background(hasValue ? settings.color.opacity(0.1) : .clear)
             .cornerRadius(100)
             .foregroundColor(colorScheme == .dark ? .white : .black)
-            .overlay(
-                Circle()
-                    .stroke(activeIndex == index ? settings.color : Color(.systemGray3), lineWidth: 2)
-            )
+//            .overlay(
+//                Circle()
+//                    .stroke(activeIndex == index ? settings.color : Color(.systemGray3), lineWidth: 2)
+//            )
     }
 }
 

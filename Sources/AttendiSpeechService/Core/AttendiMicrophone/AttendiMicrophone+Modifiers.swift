@@ -17,14 +17,6 @@ import SwiftUI
 // View Modifiers
 extension AttendiMicrophone {
     @discardableResult
-    public func variant(_ variant: AttendiMicrophone.Variant) -> AttendiMicrophone {
-        let component = self
-        
-        component.settings.variant = variant
-        return component
-    }
-    
-    @discardableResult
     public func showOptions(_ variant: AttendiMicrophone.OptionsVariant = .normal) -> AttendiMicrophone {
         let component = self
         

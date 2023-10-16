@@ -55,20 +55,20 @@ struct ReportingMethodView: View {
 
                             VStack(spacing: 20) {
                                 AttendiMicrophone(
-                                    microphoneModifier: AttendiMicrophoneModifier(size: 60),
+                                    size: 60,
                                     plugins: [
                                         AttendiTranscribePlugin(apiConfig: apiConfig)
                                     ]
                                 )
-                                .variant(.white)
-                                .background(settings.color)
+//                                .variant(.white)
+//                                .background(settings.color)
                                 .cornerRadius(100)
 
                                 CompleteButton
                                     .padding(20)
-                                    .overlay(
-                                        Circle().stroke(settings.color, lineWidth: 2)
-                                    )
+//                                    .overlay(
+//                                        Circle().stroke(settings.color, lineWidth: 2)
+//                                    )
                             }
                             .padding(.leading, 20)
                         }
@@ -109,14 +109,14 @@ struct ReportingMethodView: View {
                         Spacer()
 
                         AttendiMicrophone(
-                            microphoneModifier: AttendiMicrophoneModifier(size: 60),
+                            size: 60,
                             plugins: [
                                 AttendiTranscribePlugin(apiConfig: apiConfig)
                             ]
                         )
                         // TODO: change 'variant' type
-                        .variant(.white)
-                        .background(settings.color)
+//                        .variant(.white)
+//                        .background(settings.color)
                         .cornerRadius(100)
 
                         Spacer()
@@ -124,9 +124,9 @@ struct ReportingMethodView: View {
                         CompleteButton
                             .padding(15)
                             .frame(minWidth: 0, maxWidth: .infinity)
-                            .overlay(
-                                Circle().stroke(settings.color, lineWidth: 2)
-                            )
+//                            .overlay(
+//                                Circle().stroke(settings.color, lineWidth: 2)
+//                            )
                     }
                     .padding(.top, 20)
                     .padding(.bottom, 20)
@@ -206,7 +206,7 @@ struct ReportingMethodView: View {
                     .frame(width: 15, height: 15)
                     .opacity(submitting ? 1 : 0)
                 Image(systemName: "checkmark")
-                    .foregroundColor(settings.color)
+//                    .foregroundColor(settings.color)
                     .font(.system(size: 15, weight: .bold))
                     .opacity(submitting ? 0 : 1)
             }
