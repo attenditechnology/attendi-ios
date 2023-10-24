@@ -26,15 +26,25 @@ public class AudioNotificationPlugin: AttendiMicrophonePlugin {
             mic.callbacks.onBeforeStartRecording {
                 let t1 = Date()
                 
-                // We await until the audio has finished playing before starting recording,
-                // to prevent the recorded audio from containing the notification sound. This was
-                // leading to some erroneous transcriptions that added an 'o' at the beginning of the
-                // transcript.
+                let audioPlayer = mic.audioPlayer
+                
                 await withUnsafeContinuation { continuation in
-                    mic.audioPlayer.playSound(sound: "start_notification") {
+                    Task {
+                        var finishedPlaying: Bool = false
+                        
+                        audioPlayer.playSound(sound: "start_notification") {
+                            finishedPlaying = true
+                        }
+                        
+                        while !finishedPlaying {
+                            if Date().timeIntervalSince(t1) >= 2 {
+                                break
+                            }
+                            try? await Task.sleep(nanoseconds: 100_000_000)
+                        }
+                        
                         continuation.resume()
                     }
-                    // TODO: after timeout, resume in any case
                 }
                 
                 // `timeIntervalSince` returns seconds
