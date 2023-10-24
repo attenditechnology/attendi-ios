@@ -22,8 +22,11 @@ public class AttendiAudioPlayerDelegate: NSObject, AVAudioPlayerDelegate {
     var oldCategory: AVAudioSession.Category = .soloAmbient
     
     var deactivateSessionAfterPlay = false
+    var onAudioPlayerDidFinishPlaying = {}
     
-    func playSound(sound: String, deactivateSessionAfterPlay: Bool = false) {
+    func playSound(sound: String, deactivateSessionAfterPlay: Bool = false,
+                   onAudioPlayerDidFinishPlaying: @escaping () -> Void = {}
+    ) {
         guard let soundFileURL = Bundle.module.url(forResource: sound, withExtension: "mp3") else {
             print("File not found")
             return
@@ -56,6 +59,7 @@ public class AttendiAudioPlayerDelegate: NSObject, AVAudioPlayerDelegate {
             
             // We set it like this because we don't call `audioPlayerDidFinishPlaying` directly
             self.deactivateSessionAfterPlay = deactivateSessionAfterPlay
+            self.onAudioPlayerDidFinishPlaying = onAudioPlayerDidFinishPlaying
         } catch {
             print("Audio player failed.")
         }
@@ -71,6 +75,11 @@ public class AttendiAudioPlayerDelegate: NSObject, AVAudioPlayerDelegate {
         } catch {
             print("Restoring previous audio session state failed.")
         }
+        
+        self.onAudioPlayerDidFinishPlaying()
+        
+        self.deactivateSessionAfterPlay = false
+        self.onAudioPlayerDidFinishPlaying = {}
     }
 }
 

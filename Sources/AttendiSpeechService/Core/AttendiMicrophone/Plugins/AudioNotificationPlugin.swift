@@ -23,16 +23,40 @@ public class AudioNotificationPlugin: AttendiMicrophonePlugin {
         if (mic.silent) { return }
         
         Task { @MainActor in
+            mic.callbacks.onBeforeStartRecording {
+                let t1 = Date()
+                
+                // We await until the audio has finished playing before starting recording,
+                // to prevent the recorded audio from containing the notification sound. This was
+                // leading to some erroneous transcriptions that added an 'o' at the beginning of the
+                // transcript.
+                await withUnsafeContinuation { continuation in
+                    mic.audioPlayer.playSound(sound: "start_notification") {
+                        continuation.resume()
+                    }
+                    // TODO: after timeout, resume in any case
+                }
+                
+                // `timeIntervalSince` returns seconds
+                let playAudioDurationMilliseconds = Date().timeIntervalSince(t1) * 1000
+                
+                // Since playing the notification audio takes some time, we shorten the
+                // delay before showing the recording screen by the same amount of time. Otherwise the
+                // user would wait longer than necessary before seeing the recording UI.
+                mic.shortenShowRecordingDelayByMilliseconds = Int(playAudioDurationMilliseconds)
+            }
+            
             // We do it here and not on start recording since the recording might already be started
             // before we signal to the user that that is the case. We only want them to start speaking
             // when they think we are recording, so that they don't start speaking too early.
             mic.callbacks.onUIState { uiState in
                 if uiState == .recording {
-                    mic.audioPlayer.playSound(sound: "start_notification")
+                    // Reset the delay to 0, just to clean up after ourselves.
+                    mic.shortenShowRecordingDelayByMilliseconds = 0
                 }
             }
             
-            mic.callbacks.onBeforeStopRecording {
+            mic.callbacks.onStopRecording {
                 mic.audioPlayer.playSound(sound: "stop_notification")
             }
         }
