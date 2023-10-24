@@ -15,6 +15,9 @@
 import SwiftUI
 import AVFoundation
 
+
+let startNotificationSoundTimeoutSeconds: Double = 2
+
 /// Play sounds at certain points of the microphone component's lifecycle to give more feedback
 /// to the user. Specifically, play a start sound when the UI state is set to ``AttendiMicrophone/UIState-swift.enum/recording``
 /// and play a stop sound just before recording is stopped.
@@ -28,18 +31,20 @@ public class AudioNotificationPlugin: AttendiMicrophonePlugin {
                 
                 let audioPlayer = mic.audioPlayer
                 
-                await withUnsafeContinuation { continuation in
+                // Since we have no guarantee that `onAudioPlayerDidFinishPlaying` will be called after calling
+                // `playSound`, we can't simply call `continuation.resume` in the `onAudioPlayerDidFinishPlaying`
+                // callback, as it might never be called. Therefore we currently poll the status of a `finishedPlaying`
+                // boolean every so often, and wait for a maximum of `startNotificationSoundTimeoutSeconds` seconds
+                // before resuming.
+                await withCheckedContinuation { continuation in
                     Task {
                         var finishedPlaying: Bool = false
                         
-                        audioPlayer.playSound(sound: "start_notification") {
+                        audioPlayer.playSound(sound: "start_notification", onAudioPlayerDidFinishPlaying: {
                             finishedPlaying = true
-                        }
+                        })
                         
-                        while !finishedPlaying {
-                            if Date().timeIntervalSince(t1) >= 2 {
-                                break
-                            }
+                        while !finishedPlaying && Date().timeIntervalSince(t1) < startNotificationSoundTimeoutSeconds {
                             try? await Task.sleep(nanoseconds: 100_000_000)
                         }
                         
