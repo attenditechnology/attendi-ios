@@ -28,7 +28,6 @@ extension AttendiMicrophone {
         var stopRecordingCallbacks: [String: VoidCallback] = [:]
         var UIStateCallbacks: [String: (AttendiMicrophone.UIState) async -> Void] = [:]
         var errorCallbacks: [String: (AttendiMicrophone.Errors) async -> Void] = [:]
-        var volumeCallbacks: [String: (Double) async -> Void] = [:]
         
         /// [PLUGIN API]
         /// Register a callback that will be called when the button is clicked for the first time.
@@ -119,19 +118,6 @@ extension AttendiMicrophone {
             errorCallbacks[id] = callback
             return { [weak self] in
                 self?.errorCallbacks[id] = nil
-            }
-        }
-        
-        /// [PLUGIN API]
-        /// Register a callback that will be called when the audio volume is updated. The new volume is passed to the callback.
-        ///
-        /// - Returns: A function that can be used to remove the added callback.
-        @discardableResult
-        public func onVolume(_ callback: @escaping (Double) async -> Void) -> () -> Void {
-            let id = UUID().uuidString
-            volumeCallbacks[id] = callback
-            return { [weak self] in
-                self?.volumeCallbacks[id] = nil
             }
         }
     }
