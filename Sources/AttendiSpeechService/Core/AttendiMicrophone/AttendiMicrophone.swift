@@ -445,6 +445,7 @@ public struct AttendiMicrophone: View {
                         
                         // UInt64 can't handle negative numbers, so we need to make sure it's not negative.
                         let realRecordingDelay = max(recordingStartDelayMilliseconds - shortenShowRecordingDelayByMilliseconds, 0)
+                        shortenShowRecordingDelayByMilliseconds = 0
                         
                         // Simulate loading time before recording so that the user doesn't start speaking before
                         // the recording has started.
