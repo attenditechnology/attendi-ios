@@ -15,6 +15,9 @@
 import SwiftUI
 import AVFoundation
 
+
+let startNotificationSoundTimeoutSeconds: Double = 2
+
 /// Play sounds at certain points of the microphone component's lifecycle to give more feedback
 /// to the user. Specifically, play a start sound when the UI state is set to ``AttendiMicrophone/UIState-swift.enum/recording``
 /// and play a stop sound just before recording is stopped.
@@ -23,17 +26,47 @@ public class AudioNotificationPlugin: AttendiMicrophonePlugin {
         if (mic.silent) { return }
         
         Task { @MainActor in
-            // We do it here and not on start recording since the recording might already be started
-            // before we signal to the user that that is the case. We only want them to start speaking
-            // when they think we are recording, so that they don't start speaking too early.
-            mic.callbacks.onUIState { uiState in
-                if uiState == .recording {
-                    mic.audioPlayer.playSound(sound: "start_notification")
-                }
+            mic.callbacks.onBeforeStartRecording {
+                let t1 = Date()
+                
+                let audioPlayer = mic.audioPlayer
+                
+                await self.playStartNotificationAudioWithTimeout(audioPlayer, t1)
+                
+                // `timeIntervalSince` returns seconds
+                let playAudioDurationMilliseconds = Date().timeIntervalSince(t1) * 1000
+                
+                // Since playing the notification audio takes some time, we shorten the
+                // delay before showing the recording screen by the same amount of time. Otherwise the
+                // user would wait longer than necessary before seeing the recording UI.
+                mic.shortenShowRecordingDelayByMilliseconds += Int(playAudioDurationMilliseconds)
             }
             
-            mic.callbacks.onBeforeStopRecording {
+            mic.callbacks.onStopRecording {
                 mic.audioPlayer.playSound(sound: "stop_notification")
+            }
+        }
+    }
+    
+    func playStartNotificationAudioWithTimeout(_ audioPlayer: AttendiAudioPlayerDelegate, _ t1: Date) async {
+        // Since we have no guarantee that `onAudioPlayerDidFinishPlaying` will be called after calling
+        // `playSound`, we can't simply call `continuation.resume` in the `onAudioPlayerDidFinishPlaying`
+        // callback, as it might never be called. Therefore we currently poll the status of a `finishedPlaying`
+        // boolean every so often, and wait for a maximum of `startNotificationSoundTimeoutSeconds` seconds
+        // before resuming.
+        await withCheckedContinuation { continuation in
+            Task {
+                var finishedPlaying: Bool = false
+                
+                audioPlayer.playSound(sound: "start_notification", onAudioPlayerDidFinishPlaying: {
+                    finishedPlaying = true
+                })
+                
+                while !finishedPlaying && Date().timeIntervalSince(t1) < startNotificationSoundTimeoutSeconds {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                }
+                
+                continuation.resume()
             }
         }
     }

@@ -18,7 +18,7 @@ import AVFoundation
 let ATTENDI_BUTTON_SIZE: Double = 32.0
 
 let recordingStartDelayMilliseconds = 500
-let recordingStopDelayMilliseconds = 300
+let recordingStopDelayMilliseconds = 200
 
 let defaultMicrophoneColor = Color(hex: "#1C69E8")
 
@@ -443,9 +443,13 @@ public struct AttendiMicrophone: View {
                             await callback()
                         }
                         
+                        // UInt64 can't handle negative numbers, so we need to make sure it's not negative.
+                        let realRecordingDelay = max(recordingStartDelayMilliseconds - shortenShowRecordingDelayByMilliseconds, 0)
+                        shortenShowRecordingDelayByMilliseconds = 0
+                        
                         // Simulate loading time before recording so that the user doesn't start speaking before
                         // the recording has started.
-                        try? await Task.sleep(nanoseconds: UInt64(recordingStartDelayMilliseconds * 1_000_000))
+                        try? await Task.sleep(nanoseconds: UInt64(realRecordingDelay * 1_000_000))
                         
                         uiState = .recording
                     } catch {
@@ -604,6 +608,12 @@ public struct AttendiMicrophone: View {
             self.tooltipVisible = true
         }
     }
+    
+    // MARK: ============= Other ================
+    
+    /// The component already starts recording, only showing the actual recording UI after
+    /// a slight delay. This variable can be used to shorten that delay.
+    @State var shortenShowRecordingDelayByMilliseconds: Int = 0
 }
 
 struct AttendiMicrophoneButton_Previews: PreviewProvider {
