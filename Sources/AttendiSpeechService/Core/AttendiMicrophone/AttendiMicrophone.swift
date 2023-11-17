@@ -334,8 +334,6 @@ public struct AttendiMicrophone: View {
                 self.audioInterruptionObserver = nil
             }
             
-            print("onDisappear")
-            
             recorder.stopRecording()
             
             plugins.forEach { $0.deactivate(self) }
