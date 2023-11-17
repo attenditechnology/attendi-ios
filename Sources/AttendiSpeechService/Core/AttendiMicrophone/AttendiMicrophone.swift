@@ -326,6 +326,17 @@ public struct AttendiMicrophone: View {
             
             plugins.forEach { $0.activate(self) }
             
+            // When using the microphone in a UIHostingController, somehow it is possible
+            // for `onDisappear` and `onAppear` to be called again (after the first time!)
+            // when the application is backgrounded and foregrounded again, even when the rest
+            // of the state of the view persists. Since we stop the recorder in the `onDisappear`
+            // to clean up after ourselves, it is possible that we are only backgrounding the app
+            // and therefore need to continue recording when the app is foregrounded again.
+            if (recordingInterrupted && recorder.state != .recording) {
+                try? recorder.startRecording()
+                recordingInterrupted = false
+            }
+            
             self.onAppear(self)
         }
         .onDisappear {
@@ -334,11 +345,19 @@ public struct AttendiMicrophone: View {
                 self.audioInterruptionObserver = nil
             }
             
-            recorder.stopRecording()
+            if (recorder.state == .recording) {
+                // Stop recording to make sure we clean up after ourselves.
+                recorder.stopRecording()
+                recordingInterrupted = true
+            }
             
             plugins.forEach { $0.deactivate(self) }
         }
     }
+    
+    /// True when audio recording is interrupted by the mic disappearing or the app being backgrounded. Used to
+    /// resume recording on foregrounding the app if necessary.
+    @State var recordingInterrupted = false
     
     /// Keep track of the audio interruption observer, so that we can remove the observer when the view is dismissed.
     @State var audioInterruptionObserver: Any?
