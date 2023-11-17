@@ -271,6 +271,15 @@ public struct AttendiMicrophone: View {
         
         let width = size + (showOptions ? size : 0)
         
+        // Somehow the tooltip text is in some cases not updated properly
+        // in some instances, if the element is specified directly within the
+        // `alwaysPopover`, i.e. `.alwaysPopover { Text(self.tooltipText) }`.
+        // When we pull it out like this it does seem to be updated properly.
+        let tooltipTextElement = Text(self.tooltipText)
+                                .font(.body)
+                                .padding()
+                                .frame(maxWidth: 200)
+        
         return ZStack {
             // Show a border around the component if showOptions is true
             if showOptions {
@@ -285,10 +294,7 @@ public struct AttendiMicrophone: View {
                     getView()
                         .frame(width: size, height: size)
                         .alwaysPopover(isPresented: $tooltipVisible) {
-                            Text(self.tooltipText)
-                                .font(.body)
-                                .padding()
-                                .frame(maxWidth: 200)
+                            tooltipTextElement
                         }
                     
                     OptionsMenuView(isOpen: self.$isOptionsMenuVisible, menuGroups: menuGroups, menuItems: menuItems)
