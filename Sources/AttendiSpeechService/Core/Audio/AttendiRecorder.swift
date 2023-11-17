@@ -25,6 +25,10 @@ public class AttendiRecorder {
         case recording, paused, stopped
     }
     
+    enum Errors: Error {
+        case noInputChannels
+    }
+    
     private var engine = AVAudioEngine()
     
     public private(set) var state: RecordingState = .stopped
@@ -44,14 +48,25 @@ public class AttendiRecorder {
         // Set the audio session to active to indicate to the OS that our app is
         // recording.
         let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord)
-        try? session.setActive(true)
+        try session.setCategory(.playAndRecord)
+        try session.setActive(true)
         
         let tapNode: AVAudioNode = engine.inputNode
         let format = tapNode.outputFormat(forBus: 0)
         // TODO: make the target format configurable
         let desiredFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Double(targetSampleRate), channels: 1, interleaved: false)!
         
+        // Check if the input node has any channels. If not, we can't record.
+        if (tapNode.inputFormat(forBus: 0).channelCount == 0) {
+            throw Errors.noInputChannels
+        }
+        
+        // Sometimes the app crashed on `installTap`. Not sure if this is the issue, but sometimes
+        // this appears to happen when a tap is already present on a node. Just in case, we also
+        // `reset` the engine (but not sure yet if this actually helps).
+        engine.reset()
+        tapNode.removeTap(onBus: 0)
+
         tapNode.installTap(onBus: 0, bufferSize: 4096, format: format, block: {
             (buffer, time) in
             if let resampledBuffer = resampleBuffer(buffer: buffer, from: tapNode.outputFormat(forBus: 0), to: desiredFormat) {
