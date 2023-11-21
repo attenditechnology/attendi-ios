@@ -19,9 +19,11 @@ import Darwin
 public class VolumeFeedbackPlugin: AttendiMicrophonePlugin {
     private var volume: Double = 0
     
+    var clearSignalEnergyCallback: (() -> Void)? = nil
+    
     public override func activate(_ mic: AttendiMicrophone) {
         Task { @MainActor in
-            mic.recorder.onSignalEnergy { energy in
+            clearSignalEnergyCallback = mic.recorder.onSignalEnergy { energy in
                 let alpha = getMovingAverageAlpha(currentVolume: energy)
                 self.volume = (1 - alpha) * self.volume + alpha * energy
                 
@@ -42,6 +44,13 @@ public class VolumeFeedbackPlugin: AttendiMicrophonePlugin {
             }
         }
     }
+    
+    public override func deactivate(_ mic: AttendiMicrophone) {
+        if let callback = clearSignalEnergyCallback {
+            callback()
+        }
+        clearSignalEnergyCallback = nil
+    }
 }
 
 /// We bias the volume to stay high if it was high recently.
@@ -51,9 +60,9 @@ func getMovingAverageAlpha(currentVolume: Double) -> Double {
     let alpha = 0.7
     let volumeBiasThreshold = 0.7
     let volumeBiasAmount = 0.12
-
+    
     let normalizedVolume = normalizeVolume(currentVolume)
-
+    
     let highVolumeBias = normalizedVolume > volumeBiasThreshold ? volumeBiasAmount : 0.0
     
     return alpha - highVolumeBias
@@ -65,5 +74,5 @@ func getMovingAverageAlpha(currentVolume: Double) -> Double {
 /// During testing, observed values were around 200 when no speaking occurred, with speaking volume up
 /// to 3000-6000.
 func normalizeVolume(_ audioLevel: Double) -> Double {
-  return min(max((audioLevel - 300) / 2000, 0), 1)
+    return min(max((audioLevel - 300) / 2000, 0), 1)
 }
