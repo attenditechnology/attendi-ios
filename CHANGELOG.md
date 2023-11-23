@@ -7,15 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `onDisappear` plugin API
+
+  When using the microphone in a UIHostingController, somehow it is possible
+  for the view's `onDisappear` and `onAppear` functions to be called again (after the first time!)
+  when the application is backgrounded and foregrounded again, even when the rest
+  of the state of the view persists.
+  The newly added `onDisappear` function allows clients to stop the recording when the view disappears.
+
+  An example:
+
+  ```swift
+  /// An example plugin that handles a case in which the app is backgrounded while the mic is recording.
+  /// Currently stops the recording and performs any registered audio tasks when the view disappears.
+  ///
+  /// When using the microphone in a UIHostingController, somehow it is possible
+  /// for the view's `onDisappear` and `onAppear` functions to be called again (after the first time!)
+  /// when the application is backgrounded and foregrounded again, even when the rest
+  /// of the state of the view persists.
+
+  public class AttendiHandleBackgroundingPlugin: AttendiMicrophonePlugin {
+      var clearCallbacks: [() -> Void] = []
+
+      public override func activate(_ mic: AttendiMicrophone) {
+          Task {
+              clearCallbacks.append(
+                  mic.callbacks.onDisappear {
+                      // Stop recording and call the registered audio tasks when `onDisappear`
+                      // is called.
+                      if (mic.recorder.state == .recording) {
+                          await mic.stop(delayMilliseconds: 0)
+                      }
+                  }
+              )
+          }
+      }
+
+      public override func deactivate(_ mic: AttendiMicrophone) {
+          for callback in clearCallbacks {
+              callback()
+          }
+
+          clearCallbacks = []
+      }
+  }
+  ```
+
 ### Fixed
 
-- Implemented `deactivate` method for default plugins `AudioNotificationPlugin` and `VolumeFeedbackPlugin`
+- Implemented `deactivate` method for default plugins `AudioNotificationPlugin` and `VolumeFeedbackPlugin` and for the plugin `AttendiErrorPlugin`.
 
   These were not implemented as it was previously assumed that onDisappear and onAppear would not
   be called when backgrounding and foregrounding respectively. The plugins are activated and deactivated
   in these methods. Since the deactivate method was not implemented for some plugins, callbacks would be
   registered multiple times without cleaning up in between. Now, we make sure to properly implement the
   deactivate function for the plugins included in the microphone by default.
+
+- Tooltip flashing in and out
+
+  In the tooltip presentation logic, we now only present the popover if it doesn't already
+  exist.
+  Previously the we would dismiss and re-present
+  the popover if it already exists. However, this leads to the popover to
+  flash in and out when the SwiftUI view re-renders. The current behavior
+  seems to better match what is intended.
 
 ## [0.2.0] - 2023-11-17
 
