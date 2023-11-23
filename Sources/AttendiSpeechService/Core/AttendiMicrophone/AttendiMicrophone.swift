@@ -18,7 +18,7 @@ import AVFoundation
 let ATTENDI_BUTTON_SIZE: Double = 32.0
 
 let recordingStartDelayMilliseconds = 500
-let recordingStopDelayMilliseconds = 200
+public let recordingStopDelayMilliseconds = 200
 
 let defaultMicrophoneColor = Color(hex: "#1C69E8")
 
@@ -326,17 +326,6 @@ public struct AttendiMicrophone: View {
             
             plugins.forEach { $0.activate(self) }
             
-            // When using the microphone in a UIHostingController, somehow it is possible
-            // for `onDisappear` and `onAppear` to be called again (after the first time!)
-            // when the application is backgrounded and foregrounded again, even when the rest
-            // of the state of the view persists. Since we stop the recorder in the `onDisappear`
-            // to clean up after ourselves, it is possible that we are only backgrounding the app
-            // and therefore need to continue recording when the app is foregrounded again.
-            if (recordingInterrupted && recorder.state != .recording) {
-                try? recorder.startRecording()
-                recordingInterrupted = false
-            }
-            
             self.onAppear(self)
         }
         .onDisappear {
@@ -345,10 +334,10 @@ public struct AttendiMicrophone: View {
                 self.audioInterruptionObserver = nil
             }
             
-            if (recorder.state == .recording) {
-                // Stop recording to make sure we clean up after ourselves.
-                recorder.stopRecording()
-                recordingInterrupted = true
+            for callback in callbacks.disappearCallbacks.values {
+                Task {
+                    await callback()
+                }
             }
             
             plugins.forEach { $0.deactivate(self) }
@@ -515,7 +504,9 @@ public struct AttendiMicrophone: View {
         }
     }
     
-    public func stop() async {
+    public func stop(delayMilliseconds: Int = recordingStopDelayMilliseconds) async {
+        if uiState != .recording { return }
+        
         // Run all the onBeforeStopRecording events before turning off the microphone
         for callback in callbacks.beforeStopRecordingCallbacks.values {
             await callback()
@@ -528,7 +519,7 @@ public struct AttendiMicrophone: View {
         // while already pressing the stop button. The timeout allows recording
         // for just a bit longer before stopping the recorder, so that we also get
         // the last bit of spoken audio.
-        try? await Task.sleep(nanoseconds: UInt64(recordingStopDelayMilliseconds * 1_000_000))
+        try? await Task.sleep(nanoseconds: UInt64(delayMilliseconds * 1_000_000))
         
         recorder.stopRecording()
         

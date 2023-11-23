@@ -21,9 +21,11 @@ import SwiftUI
 /// - vibrate the device
 /// - show a tooltip with an error message next to the microphone
 public class AttendiErrorPlugin: AttendiMicrophonePlugin {
+    var clearErrorCallback: (() -> Void)? = nil
+    
     public override func activate(_ mic: AttendiMicrophone) {
         Task { @MainActor in
-            mic.callbacks.onError { error in
+            clearErrorCallback = mic.callbacks.onError { error in
                 mic.audioPlayer.playSound(sound: "error_notification")
                 
                 let impact = UIImpactFeedbackGenerator(style: .light)
@@ -40,5 +42,12 @@ public class AttendiErrorPlugin: AttendiMicrophonePlugin {
                 mic.showTooltip(tooltipMessage)
             }
         }
+    }
+    
+    public override func deactivate(_ mic: AttendiMicrophone) {
+        if let callback = clearErrorCallback {
+            callback()
+        }
+        clearErrorCallback = nil
     }
 }
