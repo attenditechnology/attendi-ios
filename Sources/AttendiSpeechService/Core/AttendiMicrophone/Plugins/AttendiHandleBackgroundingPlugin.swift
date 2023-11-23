@@ -20,7 +20,7 @@ import AVFoundation
 /// Currently stops the recording and performs any registered audio tasks when the view disappears.
 ///
 /// When using the microphone in a UIHostingController, somehow it is possible
-/// for the view's `onDisappear` and `onAppear` functoins to be called again (after the first time!)
+/// for the view's `onDisappear` and `onAppear` functions to be called again (after the first time!)
 /// when the application is backgrounded and foregrounded again, even when the rest
 /// of the state of the view persists.
 public class AttendiHandleBackgroundingPlugin: AttendiMicrophonePlugin {
