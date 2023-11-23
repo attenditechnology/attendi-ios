@@ -22,29 +22,35 @@ let startNotificationSoundTimeoutSeconds: Double = 2
 /// to the user. Specifically, play a start sound when the UI state is set to ``AttendiMicrophone/UIState-swift.enum/recording``
 /// and play a stop sound just before recording is stopped.
 public class AudioNotificationPlugin: AttendiMicrophonePlugin {
+    var clearCallbacks: [() -> Void] = []
+    
     public override func activate(_ mic: AttendiMicrophone) {
         if (mic.silent) { return }
         
         Task { @MainActor in
-            mic.callbacks.onBeforeStartRecording {
-                let t1 = Date()
-                
-                let audioPlayer = mic.audioPlayer
-                
-                await self.playStartNotificationAudioWithTimeout(audioPlayer, t1)
-                
-                // `timeIntervalSince` returns seconds
-                let playAudioDurationMilliseconds = Date().timeIntervalSince(t1) * 1000
-                
-                // Since playing the notification audio takes some time, we shorten the
-                // delay before showing the recording screen by the same amount of time. Otherwise the
-                // user would wait longer than necessary before seeing the recording UI.
-                mic.shortenShowRecordingDelayByMilliseconds += Int(playAudioDurationMilliseconds)
-            }
+            clearCallbacks.append(
+                mic.callbacks.onBeforeStartRecording {
+                    let t1 = Date()
+                    
+                    let audioPlayer = mic.audioPlayer
+                    
+                    await self.playStartNotificationAudioWithTimeout(audioPlayer, t1)
+                    
+                    // `timeIntervalSince` returns seconds
+                    let playAudioDurationMilliseconds = Date().timeIntervalSince(t1) * 1000
+                    
+                    // Since playing the notification audio takes some time, we shorten the
+                    // delay before showing the recording screen by the same amount of time. Otherwise the
+                    // user would wait longer than necessary before seeing the recording UI.
+                    mic.shortenShowRecordingDelayByMilliseconds += Int(playAudioDurationMilliseconds)
+                }
+            )
             
-            mic.callbacks.onStopRecording {
-                mic.audioPlayer.playSound(sound: "stop_notification")
-            }
+            clearCallbacks.append(
+                mic.callbacks.onStopRecording {
+                    mic.audioPlayer.playSound(sound: "stop_notification")
+                }
+            )
         }
     }
     
@@ -69,5 +75,13 @@ public class AudioNotificationPlugin: AttendiMicrophonePlugin {
                 continuation.resume()
             }
         }
+    }
+    
+    public override func deactivate(_ mic: AttendiMicrophone) {
+        for callback in clearCallbacks {
+            callback()
+        }
+        
+        clearCallbacks = []
     }
 }

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Implemented `deactivate` method for default plugins `AudioNotificationPlugin` and `VolumeFeedbackPlugin`
+
+  These were not implemented as it was previously assumed that onDisappear and onAppear would not
+  be called when backgrounding and foregrounding respectively. The plugins are activated and deactivated
+  in these methods. Since the deactivate method was not implemented for some plugins, callbacks would be
+  registered multiple times without cleaning up in between. Now, we make sure to properly implement the
+  deactivate function for the plugins included in the microphone by default.
+
 ## [0.2.0] - 2023-11-17
 
 ### Modified

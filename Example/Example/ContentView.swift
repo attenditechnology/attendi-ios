@@ -209,6 +209,7 @@ struct HoveringMicrophoneScreen: View {
                         ),
                         plugins: [
                             AttendiErrorPlugin(),
+                            AttendiHandleBackgroundingPlugin(),
                             AttendiTranscribePlugin(apiConfig: apiConfig),
                         ]
                     ) { text in

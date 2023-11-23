@@ -28,6 +28,7 @@ extension AttendiMicrophone {
         var stopRecordingCallbacks: [String: VoidCallback] = [:]
         var UIStateCallbacks: [String: (AttendiMicrophone.UIState) async -> Void] = [:]
         var errorCallbacks: [String: (AttendiMicrophone.Errors) async -> Void] = [:]
+        var disappearCallbacks: [String: VoidCallback] = [:]
         
         /// [PLUGIN API]
         /// Register a callback that will be called when the button is clicked for the first time.
@@ -118,6 +119,19 @@ extension AttendiMicrophone {
             errorCallbacks[id] = callback
             return { [weak self] in
                 self?.errorCallbacks[id] = nil
+            }
+        }
+
+        /// [PLUGIN API]
+        /// Register a callback that will be called in the microphone view's `onDisappear` function.
+        ///
+        /// - Returns: A function that can be used to remove the added callback.
+        @discardableResult
+        public func onDisappear(_ callback: @escaping VoidCallback) -> () -> Void {
+            let id = UUID().uuidString
+            disappearCallbacks[id] = callback
+            return { [weak self] in
+                self?.disappearCallbacks[id] = nil
             }
         }
     }
