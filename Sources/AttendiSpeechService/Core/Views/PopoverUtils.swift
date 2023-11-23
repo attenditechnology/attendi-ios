@@ -46,11 +46,13 @@ struct AlwaysPopoverModifier<PopoverContent>: ViewModifier where PopoverContent:
         popover.delegate = contentController
         
         guard let sourceVC = view.closestViewController() else { return }
-        if let presentedVC = sourceVC.presentedViewController {
-            presentedVC.dismiss(animated: true) {
-                sourceVC.present(contentController, animated: true)
-            }
-        } else {
+        
+        // Only present the popover if it doesn't already exist.
+        // Previously the code (from the original article) would dismiss and re-present
+        // the popover if it already exists. However, this leads to the popover to
+        // flash in and out when the SwiftUI view re-renders. The current behavior seems
+        // to better match what is intended.
+        if sourceVC.presentedViewController == nil {
             sourceVC.present(contentController, animated: true)
         }
     }
