@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- memory leak of AttendiTranscribePlugin
+
+  Since `AttendiMicrophone` is a struct containing reference types like
+  Callbacks, using it in closures can create strong references to those
+  reference types that create retain cycles and are therefore not garbage collected,
+  creating memory leaks. Currently, we move all the references to the mic in the plugin
+  outside of any closure definitions, which seems to fix the issue. In terms of dev
+  experience, it's not really nice, since you have to define all the methods above the
+  closures before using them.
+
 ## [0.2.1 - 2023-11-23]
 
 ### Added
