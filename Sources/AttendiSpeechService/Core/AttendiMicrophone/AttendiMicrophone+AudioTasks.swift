@@ -21,13 +21,8 @@ extension AttendiMicrophone {
     /// Data blob. A registered audio task needs to be activated by calling ``setActiveAudioTask`` with its ``taskId``.
     ///
     /// - Returns: A function that de-registers the added task.
-    @discardableResult
-    public func registerAudioTask(taskId: String, task: @escaping (Data) async -> Void) -> (() -> Void) {
+    public func registerAudioTask(taskId: String, task: @escaping (Data) async -> Void) -> Void {
         audioTasks[taskId] = task
-        
-        return {
-            removeAudioTask(taskToRemoveId: taskId)
-        }
     }
     
     /// The microphone can have multiple registered audio tasks, but only the *active* audio tasks are performed.
