@@ -32,21 +32,33 @@ public class AttendiTranscribePlugin: AttendiMicrophonePlugin {
     }
     
     public override func activate(_ mic: AttendiMicrophone) {
-        _ = mic.registerAudioTask(taskId: "attendi-transcribe") { wav in
+        let onEvent = mic.onEvent
+        let onResult = mic.onResult
+        let errorCallbacks = mic.callbacks.errorCallbacks.values
+        
+        mic.registerAudioTask(taskId: "attendi-transcribe") { [weak self] wav in
+            guard let self = self else { return }
+            
             let wavBase64 = wav.base64EncodedString()
             
             let result = await self.client.transcribe(wavBase64, apiConfig: self.apiConfig)
             
             switch result {
             case .success(let transcript):
-                mic.onEvent("attendi-transcribe", transcript)
-                mic.onResult(transcript)
+                onEvent("attendi-transcribe", transcript)
+                onResult(transcript)
             case .failure(let error):
-                await mic.triggerError(.general(message: "Kon de audio niet opsturen"))
+                for callback in errorCallbacks {
+                    await callback(.general(message: "Kon de audio niet opsturen"))
+                }
                 print("Error: \(error)")
             }
         }
         
         mic.setActiveAudioTask("attendi-transcribe")
+    }
+    
+    public override func deactivate(_ mic: AttendiMicrophone) {
+        mic.removeAudioTask(taskToRemoveId: "attendi-transcribe")
     }
 }
