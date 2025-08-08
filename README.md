@@ -1,164 +1,190 @@
 # Attendi Speech Service for iOS
 
-The Attendi Speech Service iOS SDK provides the `AttendiMicrophone` component: a `SwiftUI` microphone button that can be used to record audio and perform arbitrary tasks with that audio, such as audio transcription.
+The Attendi Speech Service iOS SDK provides tools for capturing and processing audio in Android applications. It includes `AttendiMicrophone`, a customizable SwiftUI component, and `AttendiRecorder`, an asynchronous protocol for low-level audio recording built with Swift Concurrency.
 
-The component is built with extensibility in mind. It can be extended with plugins that add functionality to the component using the component's plugin APIs. Arbitrary logic can for instance be executed at certain points in the component's lifecycle, such as before recording starts, or when an error occurs.
-
-The `AttendiClient` class provides an interface to easily communicate with the Attendi Speech Service backend APIs.
+The SDK is designed with extensibility in mind, supporting plugins to customize behavior like transcription, feedback, and error handling.
 
 ## Getting started
 
-The SDK is available as a `Swift` package.
+The SDK is available as a dynamic framework that can be integrated using either Swift Package Manager or Carthage.
 
-To utilize the Attendi Speech Service iOS package, you need to first include it as a dependency in your app.
+### Installation instructions
 
-You have three options to install the dependency:
+* There are three ways to install the SDK using Swift Package Manager:
 
-_Option 1: Manual Installation_
+_Option 1: Local Installation (For Development)_
+- Clone the Repository
+git clone https://github.com/attenditechnology/attendi-ios.git
+- Add Local Swift Package
+In Xcode:
+- Open your app's .xcodeproj file (e.g., AttendiSpeechServiceExample.xcodeproj).
+- Select the project in the Project Navigator.
+- Go to the Package Dependencies tab.
+- Click the "+" button.
+- Choose "Add Local...".
+- Select the cloned repository folder (where Package.swift is located).
+- Finish the setup and confirm.
 
-1. Clone the Repository:
+_Option 2: Remote URL Installation (Recommended for Consumers)_
+- Open your project in Xcode.
+- Go to the Package Dependencies tab in the project settings.
+- Click the "+" button to add a new package.
+- Enter the following GitHub URL:
+https://github.com/attenditechnology/attendi-ios
+- Select the main branch or a specific version.
+- Click Add Package.
 
-- Clone the GitHub repository to your local machine using `git clone`.
+_Option 3: Add via Package.swift (For SwiftPM Projects)_
+- Add the following to your Package.swift dependencies:
+dependencies: [
+    .package(url: "https://github.com/attenditechnology/attendi-ios", from: "0.3.0")
+]
+- Then run:
+swift package resolve
 
-2. Add Package:
+Once the package is added using any of the options above, link it to your app target:
+- Select your app target in the project settings.
+- Go to the General tab.
+- Scroll down to Frameworks, Libraries, and Embedded Content.
+- Make sure AttendiSpeechService is listed.
+- If it’s not, click the "+", search for AttendiSpeechService, and add it.
 
-- Go to Project Settings > Frameworks, Libraries and Embedded Content.
-- Click "+" to Add Package Dependency.
-- Enter the local path to the cloned "AttendiSpeechService" repository.
-- Select Package: Choose "AttendiSpeechService" from the list.
-- Integration: Xcode will integrate the package from the local repository.
+* To fetch the Attendi Speech Service as a Carthage framework:
+1. Add the dependency to your Cartfile:
+github attenditechnology/attendi-ios
+2. Run carthage:
+carthage update --use-xcframeworks
+3. In Xcode:
+- Select your app target.
+- Go to the General tab.
+- Scroll down to Frameworks, Libraries, and Embedded Content.
+- Click the "+", find AttendiSpeechService.xcframework, and add it.
+- If you are adding the framework to an "App target", ensure it is set to "Embed & Sign", otherwise
+if you are embedding the framework into another framework, ensure it is set to "Do Not Embed".
 
-_Option 2: URL Installation_
+## Usage
 
-- Go to Package Dependencies.
-- Enter the specific URL (https://github.com/attenditechnology/attendi-ios).
-- Select the main branch.
-
-_Option 3: Package.swift Integration_
-
-You can also incorporate the client into your project by including it as a dependency in your Package.swift file, as it's distributed through Swift Package Manager and run `swift package resolve`:
-
-```swift
-import PackageDescription
-
-let package = Package(
-    name: "MyAttendiApp",
-    dependencies: [
-        .package(name: "attendispeechservice", url: "https://github.com/attenditechnology/attendi-ios.git", .branch("main")),
-    ],
-    targets: [
-        .target(
-            name: "AttendiSpeechService",
-            dependencies: []),
-        .testTarget(
-            name: "AttendiSpeechServiceTests",
-            dependencies: ["MyApp"]),
-        ]
-)
-```
-
-After installing and building the package, you can use the microphone component in your project:
+After installation and linking, you can use the microphone component and/or the recorder component in your project:
 
 ```swift
 import AttendiSpeechService
+```
 
-// within some SwiftUI view
+## Core Components
 
+### AttendiRecorder
+
+An async protocol for recording audio using Apple’s AVAudioEngine or AVAudioRecorder APIs. It supports:
+* Async start/stop recording (with optional delays)
+* ObservableObject-based state observation (@Published)
+* Resource management
+* Plugin-driven behavior via AttendiRecorderPlugin
+
+Example Usage
+```swift
+let recorder = AttendiRecorderFactory.create()
+
+private func onButtonPressed() {
+    Task {
+        if recorder.model.state == AttendiRecorderState.notStartedRecording {
+            await recorder.start()
+        } else if recorder.model.state == AttendiRecorderState.recording {
+            await recorder.stop()
+        }
+    }
+}
+```
+
+### AttendiMicrophone
+A SwiftUI component designed for audio capture using a visual microphone button. It integrates with an AttendiRecorder instance and supports plugin-driven behavior, visual feedback, and customization of appearance and interaction.
+
+Example Usage
+```swift
 AttendiMicrophone(
-    // Sets the width and height of the microphone.
-    size: 60,
-    // Specify detailed color theme. The mic is considered active when it is recording
-    // or processing.
-    colors: AttendiMicrophone.Colors(
-        inactiveBackgroundColor: pinkColor,
-        inactiveForegroundColor: Color.white,
-        activeBackgroundColor: pinkColor,
-        activeForegroundColor: Color.white
+    recorder: recorderInstance,
+    settings: AttendiMicrophoneSettings(
+        size: 64,
+        cornerRadius: 16,
+        colors: AttendiMicrophoneDefaults.colors(baseColor: .red),
+        isVolumeFeedbackEnabled: false
     ),
-    // or create a color theme from one color
-    // colors: AttendiMicrophone.Colors(baseColor: Color.Red),
-    //
-    // If not set, the component will have a circular shape. Otherwise, uses a
-    // rounded corner shape with this corner radius.
-    cornerRadius: 20,
-    // Add plugins if necessary. These extend the functionality of the microphone component.
-    plugins: [
-        // Tells microphone what to do when an error occurs.
-        AttendiErrorPlugin(),
-        // Transcribes audio using the Attendi Speech Service.
-        AttendiTranscribePlugin(apiConfig: apiConfig),
-    ]
-    // The transcribe plugin calls an `onResult` callback when the transcription result is available.
-    // This allows the client to access the transcription result and do something with it.
-) { text in
-    print(text)
-}
-// We can use view modifiers as usual here.
-.padding(8)
-```
-
-In the example above, the `AttendiMicrophone` component is used to transcribe audio. The `AttendiTranscribePlugin` plugin adds the transcription functionality and the `AttendiErrorPlugin` plugin tells the component what to do when an error occurs.
-
-For more details on the `AttendiMicrophone`'s API, see its Swift documentation.
-
-## Communicating with the `AttendiMicrophone` component
-
-The `AttendiMicrophone` exposes three callbacks in its initializer: `onEvent`, `onResult`, and `onAppear`. The `onResult` callback can be called by plugins when they want to signal a result to the client when that result is in text (string) form. As seen in the example above, the text can be accessed by the client by providing a closure to the `onResult` parameter.
-
-The `onEvent` callback can be called by plugins when they want to signal a more general event to the client. Plugins can call `onEvent` and pass it an event name and a result object. The client can then listen for these events by providing a closure to the `onEvent` parameter. The client can then check the event name and the result object to determine what to do.
-
-The `onAppear` callback is useful when wanting to add some functionality to the microphone component at the callsite. Since passing the closure captures the variables in the view, the calling code can for instance save the microphone's UI state in a variable by using the microphone's plugin APIs at the callsite. For example, the following code saves the microphone's UI state in a variable called `micState`:
-
-```swift
-// within some SwiftUI view
-
-// Use this e.g. to change your UI based on the microphone's UI state.
-@State var microphoneUIState: AttendiMicrophone.UIState? = nil
-
-AttendiMicrophone(
-    // ...
+    onMicrophoneTapCallback: {
+        print("Microphone tapped")
+    },
+    onRecordingPermissionDeniedCallback: {
+        print("Microphone access denied")
+    }
 )
-    onAppear: { mic in
-        mic.callbacks.onUIState { uiState in
-            self.microphoneUIState = uiState
-        }
-    }
 ```
 
-## Creating a plugin
+### Usage Examples
 
-**Warning: the microphone's plugin APIs are still under development and subject to change.**
+The following example screens demonstrate how to use `AttendiMicrophone` and `AttendiRecorder` in different real-world scenarios:
 
-Plugins allow the microphone component's functionality to be extended. The component exposes a plugin API consisting of functions that e.g. allow plugins to execute arbitrary logic at certain points in the component's lifecycle. A plugin is a class that inherits from the `AttendiMicrophonePlugin` class.
+1. `OneMicrophoneSyncScreenView`:
+Shows how to use `AttendiMicrophone` in a simple SwiftUI view without a ViewModel.
 
-The functionality of any plugin is implemented in its `activate` method. This method is called when the microphone is first initialized, and takes as input a reference to the corresponding microphone component. Any logic that needs to run when the microphone is removed from the view should be implemented in the `deactivate` method. This might for instance be necessary when the plugin changes some global state. As an example, the `AttendiErrorPlugin` plugin is implemented as follows:
+2. `RecorderStreamingScreenView`:
+Demonstrates how to use the low-level `AttendiRecorder` directly, without integrating the `AttendiMicrophone` UI component.
+Ideal for custom UIs or advanced use cases that require full control over recording flow.
+
+3. `SoapScreenView`:
+Integrates `AttendiMicrophone` into a complex SwiftUI layout with multiple TextEditor views.
+Also demonstrates:
+- How to disable the default permission denied alert (showsDefaultPermissionsDeniedAlert = false)
+- How to present a custom alert using the onRecordingPermissionDeniedCallback
+
+4. `TwoMicrophonesStreamingScreenView`:
+Illustrates how to use two `AttendiMicrophone` components in the same view.
+Each microphone operates independently with its own configuration and recorder instance, useful for multi-source streaming or comparative audio capture scenarios.
+
+## Creating an AttendiRecorderPlugin
+
+Plugins allow the `AttendiMicrophone` and `AttendiRecorder` component's functionality to be extended. The component exposes a plugin API consisting of functions that e.g. allow plugins to execute arbitrary logic at certain points in the component's lifecycle. A plugin is a class that inherits from the `AttendiRecorderPlugin` class.
+
+The functionality of any plugin is implemented in its `activate` method. This method is called when the recorder is first initialized, and takes as input a reference to the recorderModel `AttendiRecorderModel`. Any logic that needs to run when the microphone is removed from the view should be implemented in the `deactivate` method. This might for instance be necessary when the plugin changes some global state. As an example, the `AttendiAsyncTranscribePlugin` plugin on activate it hooks the model to onStartRecording to create a service connection and on deactivate it closes the connection.
 
 ```swift
-/// Does the following when an error occurs:
-/// - vibrate the device
-/// - show a tooltip with an error message next to the microphone
-public class AttendiErrorPlugin: AttendiMicrophonePlugin {
-    // The `activate` method is called when the microphone is first initialized and takes as input a reference to the microphone component.
-    public override func activate(_ mic: AttendiMicrophone) {
-        Task { @MainActor in
-            // Use the `mic.callbacks.onError` plugin API to add a callback that is called when an error occurs.
-            mic.callbacks.onError { error in
-                // Use the `mic.audioPlayer.playSound` plugin API to play a sound.
-                mic.audioPlayer.playSound(sound: "error_notification")
+public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
 
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
+    private let service: AsyncTranscribeService
 
-                // Use the `showToolTip` plugin API to show a tooltip with an error message next to the microphone.
-                mic.showTooltip("An error occurred")
-            }
+    public func activate(model: AttendiRecorderModel) async {
+        await model.onStartRecording { [weak self, weak model] in
+            guard let self, let model else { return }
+            let serviceListener = createServiceListener(model: model)
+            try await service.connect(listener: serviceListener)
         }
+    }
+
+    public  public func deactivate(model: AttendiRecorderModel) async {
+        try? await service.disconnect()
     }
 }
 ```
 
-While an exhaustive list of plugin APIs is not yet available here, all plugin APIs are annotated in Swift documentation with `[PlUGIN API]`. The lifecycle callbacks are available in using `mic.callbacks` as shown above.
+## Development
+
+The project structure is organized as follows:
+
+* AttendiSpeechService/
+The core SDK framework target. This is the codebase for the Attendi Speech Service.
+
+* AttendiSpeechServiceExample/
+A sample iOS app demonstrating how to integrate and use the SDK.
+
+* AttendiSpeechService.xcworkspace
+A workspace file that groups both the SDK and the example app using their .xcodeproj files.
+When contributing, editing, or running the project, always open the .xcworkspace instead of the individual .xcodeproj files to ensure all dependencies and project references work correctly.
+
+* Package.swift
+Enables integration of the AttendiSpeechService framework as a Swift Package (SPM). This allows consumers to install the SDK via Swift Package Manager.
+
+* Scripts/swiftgen/
+Contains SwiftGen configuration files.
+SwiftGen is used to generate type-safe access to resources such as images, colors, and localized strings.
+The AttendiSpeechService framework uses SwiftGen as part of its build process — the script is automatically run during build phases of the SDK target to generate resource access code.
 
 ## Issues
 
-If you encounter any issues, don't hesitate to contact us at `omar@attendi.nl`.
+If you encounter any issues, don't hesitate to contact us at `omar@attendi.nl` or `emiliano@attendi.nl`.
