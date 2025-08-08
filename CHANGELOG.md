@@ -5,6 +5,96 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0 - 2025-08-08]
+
+### Added
+- AudioRecorder and AudioRecorderImpl: Wrap the lower-level AVAudioEngine and AVAudioSession APIs to provide a convenient, asynchronous protocol for capturing audio from the device, ensuring Swift Concurrency support and streamlined usage.
+- AttendiRecorder and AttendiRecorderImpl: High-level recording interfaces that manage audio capture, plugin coordination, and lifecycle events without requiring direct UI interaction.
+- AsyncTranscribeService: Enables integration with real-time or streaming transcription services through a Swift Concurrency–friendly interface.
+- New plugin system for recorders: Introduced AttendiRecorderPlugin, decoupled from AttendiMicrophonePlugin, allowing more granular control over recording behavior.
+- New plugins:
+  * AttendiAsyncTranscribePlugin: Supports real-time transcription by integrating with AsyncTranscribeService.
+  * AttendiStopOnAudioInterruptionPlugin: Adds graceful handling of system audio interruptions to prevent conflicts with other apps (e.g., incoming call).
+
+### Changed
+- Refactored SDK architecture: Major reorganization to improve separation of concerns and encapsulation:
+  * Clear distinctions between AudioRecorder, AttendiRecorder, and AttendiMicrophone layers.
+  * Organized internal boundaries and modular file structure for improved maintainability.
+- AttendiTranscribePlugin now supports injecting a TranscribeService and AudioEncoder for improved extensibility, supporting alternative implementations beyond the default Attendi transcription service.
+- Increased SDK Min Deployment iOS version to iOS 15.
+
+### Improved
+- Project structure modernization: The SDK is now packaged as a dynamic framework, allowing build-time script execution (e.g., SwiftGen) for generating type-safe access to resources such as localized strings, assets, and more. This improves compile-time safety and developer productivity when working within the SDK.
+- Thread safety and lifecycle handling:
+  * Enhanced lifecycle-aware resource cleanup using structured concurrency.
+  * Improved stability and reliability of audio operations in AudioRecorder and AttendiRecorder, preventing memory leaks and avoiding illegal state transitions.
+- New recording examples: The SDK example now covers and validate all core SDK functionalities, including audio recording, live transcription, plugin integration, and error handling.
+
+### Breaking Changes
+
+- Class renaming:
+MicrophoneUIState → AttendiRecorderState
+TranscribeAPIConfig → AttendiTranscribeAPIConfig
+
+- AttendiTranscribeAPIConfig updated fields:
+```swift
+// Old:
+let apiURL: String
+let modelType: ModelType
+
+// New:
+let apiBaseURL: String
+let modelType: String? = null
+```
+
+- AttendiMicrophone parameters moved into settings:
+```swift
+// Old:
+AttendiMicrophone(
+    size: 64,
+    colors: AttendiMicrophone.Colors(baseColor: Color.red)
+)
+
+// New:
+AttendiMicrophone(
+    settings = AttendiMicrophoneSettings(
+        size: 64,
+        colors: AttendiMicrophoneDefaults.colors(baseColor: Color.red)
+    )
+)
+```
+
+- Plugin system migration from AttendiMicrophone to AttendiRecorder:
+```swift
+// Old:
+AttendiMicrophone(
+    plugins = [
+        AttendiErrorPlugin(),
+        AttendiTranscribePlugin(apiConfig = exampleAPIConfig)
+    ]
+) { newText: String in
+  // ...
+)
+
+// New:
+private let recorder = AttendiRecorderFactory.create()
+
+AttendiMicrophone(recorder: recorder)
+.onAppear {
+  Task {
+    await recorder.setPlugins(
+      AttendiErrorPlugin(),
+      AttendiSyncTranscribePlugin(
+        service: AttendiTranscribeServiceFactory.create(
+          apiConfig: apiConfig
+        ),
+        onTranscribeCompleted: { transcript: String?, error: Error? in
+          // .. 
+    )
+  }
+}
+```
+
 ## [0.2.2 - 2023-11-29]
 
 ### Fixed
