@@ -1,0 +1,27 @@
+files:
+  inputs: Resources/Sounds
+  filter: .+\.mp3$
+  outputs:
+    templateName: structured-swift5
+    params:
+        publicAccess: false
+    output: Swiftgen/Files.swift
+
+strings:
+  inputs:
+    - L10n/nl.lproj
+  outputs:
+    templateName: structured-swift5
+    params:
+        publicAccess: false
+    output: Swiftgen/Localization.swift
+
+xcassets:
+  inputs:
+    - Resources/Images.xcassets
+  outputs:
+    templateName: swift5
+    params:
+        forceFileNameEnum: true
+        publicAccess: true
+    output: Swiftgen/Asset.swift

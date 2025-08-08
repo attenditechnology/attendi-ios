@@ -1,0 +1,9 @@
+"microphone.notRecording.title" = "Microfoon inactief";
+"microphone.loading.title" = "Microfoon laden";
+"microphone.recording.title" = "Microfoon opnemen";
+"microphone.processing.title" = "Microfoon verwerken";
+
+"noMicrophone.permission.dialog.title" = "Geen toegang tot de microfoon";
+"noMicrophone.permission.dialog.body" = "Zonder toegang tot uw microfoon kan geen geluid opgenomen worden. Geef de app toegang tot uw microfoon in uw telefooninstellingen.";
+"noMicrophone.permission.dialog.goToSettings.button" = "Ga naar instellingen";
+"noMicrophone.permission.dialog.cancel.button" = "Annuleren";
