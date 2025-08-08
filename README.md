@@ -51,7 +51,7 @@ Once the package is added using any of the options above, link it to your app ta
 
 * To fetch the Attendi Speech Service as a Carthage framework:
 1. Add the dependency to your Cartfile:
-github attenditechnology/attendi-ios
+github "attenditechnology/attendi-ios"
 2. Run carthage:
 carthage update --use-xcframeworks
 3. In Xcode:
@@ -59,8 +59,9 @@ carthage update --use-xcframeworks
 - Go to the General tab.
 - Scroll down to Frameworks, Libraries, and Embedded Content.
 - Click the "+", find AttendiSpeechService.xcframework, and add it.
-- If you are adding the framework to an "App target", ensure it is set to "Embed & Sign", otherwise
-if you are embedding the framework into another framework, ensure it is set to "Do Not Embed".
+- Click on Add Other... and Add Files...
+- Select from the folder Carthage/Build/AttendiSpeechService.xcframework.
+- If you are adding the framework to an "App target", ensure it is set to "Embed & Sign", otherwise if you are embedding the framework into another framework, ensure it is set to "Do Not Embed".
 
 ## Usage
 
