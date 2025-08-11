@@ -4,7 +4,7 @@ import AttendiSpeechService
 struct SoapScreenView: View {
 
     @Binding var model: SoapScreenModel
-    @State private var isMissingPermissionsAlertPrensented: Bool = false
+    @State private var isMissingPermissionsAlertPresented: Bool = false
 
     private func shouldDisplayMicrophoneTarget(tag: Int) -> Bool {
         model.canDisplayFocusedTextField && model.focusedTextFieldIndex == tag
@@ -64,8 +64,8 @@ struct SoapScreenView: View {
                             ),
                             showsDefaultPermissionsDeniedAlert: false
                         ),
-                        onRecordingPermissionDeniedCallback: {
-                            isMissingPermissionsAlertPrensented = true
+                        onRecordingPermissionDenied: {
+                            isMissingPermissionsAlertPresented = true
                         }
                     )
                     .overlay(
@@ -76,7 +76,7 @@ struct SoapScreenView: View {
                 }
             }
         }
-        .alert("Missing Permissions", isPresented: $isMissingPermissionsAlertPrensented) {
+        .alert("Missing Permissions", isPresented: $isMissingPermissionsAlertPresented) {
             Button("OK", role: .cancel) { }
         } message: {
             Text("Recording Permissions have to be granted in order to use the microphone")

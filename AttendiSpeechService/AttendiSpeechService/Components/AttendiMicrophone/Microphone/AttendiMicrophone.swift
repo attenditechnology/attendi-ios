@@ -23,9 +23,9 @@ import SwiftUI
 ///     This is a required dependency that provides the interface for starting and stopping audio capture.
 ///   - settings: An optional `AttendiMicrophoneSettings` value used to configure the appearance,
 ///     shape, and feedback behavior (e.g., color, size, corner radius) of the microphone button.
-///   - onMicrophoneTapCallback: An optional closure called after the microphone is activated. Use this
+///   - onMicrophoneTap: An optional closure called after the microphone is activated. Use this
 ///     to trigger custom logic after a tap interaction.
-///   - onRecordingPermissionDeniedCallback: An optional closure called when the app fails to obtain
+///   - onRecordingPermissionDenied: An optional closure called when the app fails to obtain
 ///     the required microphone permissions.
 ///     When setting `showsDefaultPermissionsDeniedAlert` to false  in `AttendiMicrophoneSettings`, use this
 ///     callback to handle denied access, show alerts, or guide the user to settings.
@@ -39,14 +39,14 @@ public struct AttendiMicrophone: View {
     public init(
         recorder: AttendiRecorder,
         settings: AttendiMicrophoneSettings = AttendiMicrophoneSettings(),
-        onMicrophoneTapCallback: @escaping () -> Void = { },
-        onRecordingPermissionDeniedCallback: @escaping () -> Void = { }
+        onMicrophoneTap: @escaping () -> Void = { },
+        onRecordingPermissionDenied: @escaping () -> Void = { }
     ) {
         _viewModel = .init(wrappedValue: AttendiMicrophoneViewModel(
             recorder: recorder,
             microphoneSettings: settings,
-            onMicrophoneTapCallback: onMicrophoneTapCallback,
-            onRecordingPermissionDeniedCallback: onRecordingPermissionDeniedCallback
+            onMicrophoneTap: onMicrophoneTap,
+            onRecordingPermissionDenied: onRecordingPermissionDenied
         ))
         self.settings = settings
     }

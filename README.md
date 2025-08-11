@@ -1,6 +1,6 @@
 # Attendi Speech Service for iOS
 
-The Attendi Speech Service iOS SDK provides tools for capturing and processing audio in Android applications. It includes `AttendiMicrophone`, a customizable SwiftUI component, and `AttendiRecorder`, an asynchronous protocol for low-level audio recording built with Swift Concurrency.
+The Attendi Speech Service SDK provides tools for capturing and processing audio in iOS applications. It includes `AttendiMicrophone`, a customizable SwiftUI component, and `AttendiRecorder`, an asynchronous protocol for low-level audio recording built with Swift Concurrency.
 
 The SDK is designed with extensibility in mind, supporting plugins to customize behavior like transcription, feedback, and error handling.
 
@@ -97,7 +97,7 @@ private func onButtonPressed() {
 ```
 
 ### AttendiMicrophone
-A SwiftUI component designed for audio capture using a visual microphone button. It integrates with an AttendiRecorder instance and supports plugin-driven behavior, visual feedback, and customization of appearance and interaction.
+A SwiftUI view designed for audio capture using a visual microphone button. It integrates with an `AttendiRecorder` instance and supports plugin-driven behavior, visual feedback, and customization of appearance and interaction.
 
 Example Usage
 ```swift
@@ -132,12 +132,22 @@ Ideal for custom UIs or advanced use cases that require full control over record
 3. `SoapScreenView`:
 Integrates `AttendiMicrophone` into a complex SwiftUI layout with multiple TextEditor views.
 Also demonstrates:
-- How to disable the default permission denied alert (showsDefaultPermissionsDeniedAlert = false)
-- How to present a custom alert using the onRecordingPermissionDeniedCallback
+a. How to disable the default permission denied alert (showsDefaultPermissionsDeniedAlert = false)
+b. How to present a custom alert using the onRecordingPermissionDeniedCallback
 
 4. `TwoMicrophonesStreamingScreenView`:
 Illustrates how to use two `AttendiMicrophone` components in the same view.
 Each microphone operates independently with its own configuration and recorder instance, useful for multi-source streaming or comparative audio capture scenarios.
+
+### Recorder Plugins
+
+We offer out of the box plugins to be used with specific purposes:
+
+* `AttendiSyncTranscribePlugin` – Sends audio to a backend sync transcription API, such as Attendi’s. Designed to be extensible to support other providers as well
+* `AttendiAsyncTranscribePlugin` – Real-time transcription using a WebSocket-based connection, such as Attendi’s, with support for custom or alternative streaming APIs
+* `AttendiAudioNotificationPlugin` – Audible start/stop cues
+* `AttendiErrorPlugin` – Plays error sound and vibrates on failure
+* `AttendiStopOnAudioFocusLossPlugin` – Stops recording on focus loss
 
 ## Creating an AttendiRecorderPlugin
 
@@ -158,11 +168,26 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
         }
     }
 
-    public  public func deactivate(model: AttendiRecorderModel) async {
+    public func deactivate(model: AttendiRecorderModel) async {
         try? await service.disconnect()
     }
 }
 ```
+
+## API Services
+
+The Attendi SDK provides three core service interfaces to communicate with Attendi's backend systems or your own custom infrastructure:
+
+* TranscribeService Protocol & AttendiTranscribeServiceImpl (Default Implementation).
+Use case: Used for synchronous, single-shot transcription. You provide the complete audio recording, and the service returns a text transcription.
+Implementation: AttendiTranscribeServiceImpl connects to Attendi's backend to fulfill the request.
+
+* AsyncTranscribeService Protocol & AttendiAsyncTranscribeServiceImpl (Default Implementation)
+Use case: Used for real-time or streaming transcription over WebSockets. You stream live audio, and the service returns a transcription object containing both text and rich annotations.
+Implementation: AttendiAsyncTranscribeServiceImpl handles the streaming protocol and communication with Attendi's backend services.
+
+* AttendiAuthenticationService
+Defines the contract for authenticating with Attendi’s backend. Implementations are responsible for retrieving and refreshing valid access tokens to authorize requests.
 
 ## Development
 
