@@ -71,7 +71,6 @@ final class RecorderStreamingScreenViewModel {
     }
 
     private func onButtonPressed() {
-
         Task {
             if recorder.model.state == AttendiRecorderState.notStartedRecording {
                 await recorder.start()
@@ -79,10 +78,6 @@ final class RecorderStreamingScreenViewModel {
                 await recorder.stop()
             }
         }
-    }
-
-    private func onTextChanged(_ text: String) {
-        model.textEditorText = text
     }
 
     private func createRecorderPlugins() -> [AttendiRecorderPlugin] {

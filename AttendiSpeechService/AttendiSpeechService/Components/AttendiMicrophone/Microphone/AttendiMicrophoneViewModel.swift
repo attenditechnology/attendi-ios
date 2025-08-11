@@ -19,8 +19,8 @@ final class AttendiMicrophoneViewModel: ObservableObject {
 
     private let recorder: AttendiRecorder
     private let microphoneSettings: AttendiMicrophoneSettings
-    private let onMicrophoneTapCallback: () -> Void
-    private let onRecordingPermissionDeniedCallback: () -> Void
+    private let onMicrophoneTap: () -> Void
+    private let onRecordingPermissionDenied: () -> Void
 
     private var loadingTask: Task<Void, Never>?
     private var microphoneModel = AttendiMicrophoneModel()
@@ -33,13 +33,13 @@ final class AttendiMicrophoneViewModel: ObservableObject {
     init(
         recorder: AttendiRecorder,
         microphoneSettings: AttendiMicrophoneSettings,
-        onMicrophoneTapCallback: @escaping () -> Void,
-        onRecordingPermissionDeniedCallback: @escaping () -> Void
+        onMicrophoneTap: @escaping () -> Void,
+        onRecordingPermissionDenied: @escaping () -> Void
     ) {
         self.recorder = recorder
         self.microphoneSettings = microphoneSettings
-        self.onMicrophoneTapCallback = onMicrophoneTapCallback
-        self.onRecordingPermissionDeniedCallback = onRecordingPermissionDeniedCallback
+        self.onMicrophoneTap = onMicrophoneTap
+        self.onRecordingPermissionDenied = onRecordingPermissionDenied
         microphoneUIState = microphoneModel.uiState
 
         setupPluginLifecycle()
@@ -52,15 +52,13 @@ final class AttendiMicrophoneViewModel: ObservableObject {
 
         microphoneModel.updateShouldVerifyAudioPermission(true)
 
-        onMicrophoneTapCallback()
+        onMicrophoneTap()
     }
 
     func onAlreadyGrantedRecordingPermissions() {
         microphoneModel.updateShouldVerifyAudioPermission(false)
 
-        Task {
-            toggleRecording()
-        }
+        toggleRecording()
     }
 
     func onJustGrantedRecordingPermissions() {
@@ -76,7 +74,7 @@ final class AttendiMicrophoneViewModel: ObservableObject {
         microphoneModel.updateShouldVerifyAudioPermission(false)
         microphoneModel.updateState(.idle)
 
-        onRecordingPermissionDeniedCallback()
+        onRecordingPermissionDenied()
     }
 
     /// Cancels loading state task and shows loading state if recording takes time to start.
