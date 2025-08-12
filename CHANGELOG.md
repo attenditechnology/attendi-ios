@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1 - 2025-08-12]
+### Changed
+- Renamed `AttendiMicrophone` API methods
+  * `onMicrophoneTapCallback` -> `onMicrophoneTap`
+  * `onRecordingPermissionDeniedCallback` -> `onRecordingPermissionDenied`
+
+### Breaking Changes
+```swift
+// Old:
+AttendiMicrophone(
+    recorder: recorderInstance,
+    settings: AttendiMicrophoneSettings(
+        size: 64,
+        cornerRadius: 16,
+        colors: AttendiMicrophoneDefaults.colors(baseColor: .red),
+        isVolumeFeedbackEnabled: false
+    ),
+    onMicrophoneTapCallback: {
+        print("Microphone tapped")
+    },
+    onRecordingPermissionDeniedCallback: {
+        print("Microphone access denied")
+    }
+)
+```
+
+```swift
+// New:
+AttendiMicrophone(
+    recorder: recorderInstance,
+    settings: AttendiMicrophoneSettings(
+        size: 64,
+        cornerRadius: 16,
+        colors: AttendiMicrophoneDefaults.colors(baseColor: .red),
+        isVolumeFeedbackEnabled: false
+    ),
+    onMicrophoneTap: {
+        print("Microphone tapped")
+    },
+    onRecordingPermissionDenied: {
+        print("Microphone access denied")
+    }
+)
+```
+
 ## [0.3.0 - 2025-08-08]
 
 ### Added
