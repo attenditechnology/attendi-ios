@@ -109,10 +109,10 @@ AttendiMicrophone(
         colors: AttendiMicrophoneDefaults.colors(baseColor: .red),
         isVolumeFeedbackEnabled: false
     ),
-    onMicrophoneTapCallback: {
+    onMicrophoneTap: {
         print("Microphone tapped")
     },
-    onRecordingPermissionDeniedCallback: {
+    onRecordingPermissionDenied: {
         print("Microphone access denied")
     }
 )
