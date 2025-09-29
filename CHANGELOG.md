@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2 - 2025-09-29]
+### Changed
+- `AttendiAsyncTranscribePlugin` now connects to the WebSocket in `onBeforeStartRecording` instead of `onStartRecording`.
+  This ensures that the `AttendiMicrophone` component remains in the loading state until the WebSocket connection is fully established, improving UI consistency and user feedback.
+
+### Fixed
+- Race condition issue where stopping a recording and immediately starting a new one could leave the `AttendiMicrophone` in an incorrect UI state.
+- `AsyncTranscribeService` retry mechanism where the retry logic would not continue properly after a successful retry attempt.
+
 ## [0.3.1 - 2025-08-12]
 ### Changed
 - Renamed `AttendiMicrophone` API methods
