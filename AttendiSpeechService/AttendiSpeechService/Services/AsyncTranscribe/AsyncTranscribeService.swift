@@ -53,7 +53,7 @@ public enum AsyncTranscribeServiceError: Error, LocalizedError {
     case failedToConnect(message: String)
 
     /// Indicates the connection closed unexpectedly or with an abnormal code.
-    case closedAbnormally(message: String)
+    case closedAbnormally(message: String?)
 
     /// Connection attempt exceeded the allowed timeout.
     case connectTimeout
