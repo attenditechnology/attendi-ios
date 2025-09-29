@@ -70,7 +70,7 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
     ///
     /// Starts sending audio when enough buffered samples are collected.
     public func activate(model: AttendiRecorderModel) async {
-        await model.onStartRecording { [weak self, weak model] in
+        await model.onBeforeStartRecording { [weak self, weak model] in
             guard let self, let model else { return }
             await stateMutex.withLock { [weak self, weak model] in
                 guard let self, let model else { return }
