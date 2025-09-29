@@ -159,6 +159,7 @@ class BaseAsyncTranscribeService: AsyncTranscribeService {
         } catch {
             if retryCount == 0 {
                 listener.onError(.unknown(message: error.localizedDescription))
+                handleSocketClosed()
             } else {
                 try await connectSocket(
                     listener: listener,
@@ -172,37 +173,48 @@ class BaseAsyncTranscribeService: AsyncTranscribeService {
     }
 
     private func connectSocket(request: URLRequest) async throws {
-        /// Use URLSession for WebSocket connection with custom headers.
-        let session = URLSession(configuration: .default)
-        let webSocketTask = session.webSocketTask(with: request)
-        self.socket = webSocketTask
-
         return try await withCheckedThrowingContinuation { [weak self] continuation in
             guard let self else {
                 continuation.resume()
                 return
             }
 
+            /// Use URLSession for WebSocket connection with custom headers.
+            let socketSessionStatusBridge = WebSocketSessionStatusBridge(
+                onOpen: { [weak self] in
+                    guard let self else { return }
+
+                    /// Send initial configuration message if provided.
+                    if let openMessage = getOpenMessage() {
+                        Task { [weak self] in
+                            guard let self else { return }
+                            await send(message: openMessage)
+                        }
+                    }
+
+                    isConnected = true
+                    listener?.onOpen()
+                    continuation.resume()
+                },
+                onClose: { [weak self] closeCode, reason in
+                    guard let self else { return }
+                    if closeCode != URLSessionWebSocketTask.CloseCode.normalClosure {
+                        listener?.onError(AsyncTranscribeServiceError.closedAbnormally(message: reason))
+                    }
+                    handleSocketClosed()
+
+                }
+            )
+            let session = URLSession(configuration: .default, delegate: socketSessionStatusBridge, delegateQueue: nil)
+            let webSocketTask = session.webSocketTask(with: request)
+            self.socket = webSocketTask
             webSocketTask.resume()
 
-            /// Start receiving messages.
-            receiveMessage()
-
-            /// Send initial configuration message if provided.
-            if let openMessage = getOpenMessage() {
-                Task { [weak self] in
-                    guard let self else { return }
-                    await send(message: openMessage)
-                }
-            }
-
-            isConnected = true
-            listener?.onOpen()
-            continuation.resume()
+            receiveMessage(continuation: continuation)
         }
     }
 
-    private func receiveMessage() {
+    private func receiveMessage(continuation: CheckedContinuation<(), any Error>) {
         socket?.receive { [weak self] result in
             guard let self else { return }
             switch result {
@@ -215,13 +227,13 @@ class BaseAsyncTranscribeService: AsyncTranscribeService {
                 }
 
                 /// Continue receiving messages.
-                receiveMessage()
+                receiveMessage(continuation: continuation)
 
             case .failure(let error):
-                if !isDisconnecting {
-                    listener?.onError(.unknown(message: error.localizedDescription))
+                /// This case is when authentication succeeds, but the socket fails to connect.
+                if !isConnected && socket != nil {
+                    continuation.resume(throwing: error)
                 }
-                handleSocketClosed()
             }
         }
     }
@@ -266,7 +278,8 @@ class BaseAsyncTranscribeService: AsyncTranscribeService {
         while socket != nil {
             try? await Task.sleep(nanoseconds: Constants.serverCloseSocketIntervalCheckMilliseconds.milliToNano())
 
-            if DispatchTime.now().uptimeNanoseconds - startTime.uptimeNanoseconds > Constants.serverCloseSocketTimeoutMilliseconds.milliToNano() {
+            let elapsedTime = DispatchTime.now().uptimeNanoseconds - startTime.uptimeNanoseconds
+            if elapsedTime > Constants.serverCloseSocketTimeoutMilliseconds.milliToNano() {
                 return false /// Timeout reached.
             }
         }

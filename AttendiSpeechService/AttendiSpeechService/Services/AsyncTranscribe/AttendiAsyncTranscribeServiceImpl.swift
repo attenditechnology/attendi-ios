@@ -27,8 +27,8 @@ class AttendiAsyncTranscribeServiceImpl: BaseAsyncTranscribeService {
 
     private let apiConfig: AttendiTranscribeAPIConfig
     private let authenticationService: AttendiAuthenticationService
-    private let accessToken: String?
-    
+    private var accessToken: String?
+
     init(
         apiConfig: AttendiTranscribeAPIConfig,
         authenticationService: AttendiAuthenticationService,
@@ -47,6 +47,7 @@ class AttendiAsyncTranscribeServiceImpl: BaseAsyncTranscribeService {
         } else {
             token = try await authenticationService.authenticate(apiConfig: apiConfig)
         }
+        accessToken = token
         return try createAttendiWebSocketRequest(accessToken: token)
     }
     

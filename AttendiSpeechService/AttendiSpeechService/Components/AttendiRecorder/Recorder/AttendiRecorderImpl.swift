@@ -130,16 +130,22 @@ final class AttendiRecorderImpl: AttendiRecorder {
                 await model.callbacks.invokeOnBeforeStartRecording()
 
                 recorderTask = Task {
-                    try await Task.sleep(nanoseconds: delayMilliseconds.milliToNano())
-                    await handleErrors {
-                        try await recorder.startRecording(
-                            audioRecordingConfig: audioRecordingConfig,
-                            onAudio: { audioFrame in
-                                await self.model.callbacks.invokeOnAudioFrame(audioFrame)
-                            }
-                        )
-                        await model.updateState(.recording)
-                        await model.callbacks.invokeOnStartRecording()
+                    try? await startStopMutex.withLock {
+                        if !hasStarted || isReleased {
+                            return
+                        }
+                        
+                        try await Task.sleep(nanoseconds: delayMilliseconds.milliToNano())
+                        await handleErrors {
+                            try await recorder.startRecording(
+                                audioRecordingConfig: audioRecordingConfig,
+                                onAudio: { audioFrame in
+                                    await self.model.callbacks.invokeOnAudioFrame(audioFrame)
+                                }
+                            )
+                            await model.updateState(.recording)
+                            await model.callbacks.invokeOnStartRecording()
+                        }
                     }
                 }
             }
