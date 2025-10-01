@@ -78,17 +78,16 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
                 }
                 isStreamConnecting = true
 
-                /// A task is used to free the mutex and avoid a deadlock in case an error happens immediately after trying to connect.
-                /// Without a task and calling processStreamCompleted inside this same thread will cause a deadlock.
-                Task { [weak self] in
-                    guard let self else { return }
-                    
-                    resetPluginState()
-                    onStreamConnecting()
-                    do {
-                        let serviceListener = createServiceListener(model: model)
-                        try await service.connect(listener: serviceListener)
-                    } catch {
+                resetPluginState()
+                onStreamConnecting()
+                do {
+                    let serviceListener = createServiceListener(model: model)
+                    try await service.connect(listener: serviceListener)
+                } catch {
+                    /// A task is used to free the mutex and avoid a deadlock in case an error happens immediately after trying to connect.
+                    /// Without a task and calling processStreamCompleted inside this same thread will cause a deadlock.
+                    Task { [weak self] in
+                        guard let self else { return }
                         await forceStopRecording(model: model, error: error)
                         await processStreamCompleted()
                     }
