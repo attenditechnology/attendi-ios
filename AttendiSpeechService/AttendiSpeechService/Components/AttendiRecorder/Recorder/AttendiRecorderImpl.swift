@@ -67,14 +67,23 @@ final class AttendiRecorderImpl: AttendiRecorder {
         ///
         /// These callbacks are intentionally marked as `internal` to prevent external consumers from
         /// overriding them directly when using the plugin, preserving encapsulation and consistency.
-        model.onStartCalled = { [weak self] in
-            guard let self else { return }
-            await start()
+        ///
+        /// Wrapping in `Task` ensures that the start procedure can run independently of the synchronous
+        /// callback, preventing self-deadlocks and preserving forward progress.
+        model.onStartCalled = {
+            Task { [weak self] in
+                guard let self else { return }
+                await start()
+            }
         }
 
-        model.onStopCalled = { [weak self] in
-            guard let self else { return }
-            await stop()
+        /// Wrapping in `Task` ensures that the stop procedure can run independently of the synchronous
+        /// callback, preventing self-deadlocks and preserving forward progress.
+        model.onStopCalled = {
+            Task { [weak self] in
+                guard let self else { return }
+                await stop()
+            }
         }
 
         Task {
