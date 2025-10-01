@@ -34,7 +34,6 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
     private let onStreamCompleted: (AttendiTranscribeStream, Error?) -> Void
 
     private var transcribeStream = AttendiTranscribeStream()
-    private var streamingBuffer: [Int16] = []
 
     /// Used for ensuring thread safety.
     private let stateMutex = AsyncMutex()
@@ -79,13 +78,20 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
                 }
                 isStreamConnecting = true
 
-                resetPluginState()
-                onStreamConnecting()
-                do {
-                    let serviceListener = createServiceListener(model: model)
-                    try await service.connect(listener: serviceListener)
-                } catch {
-                    await forceStopRecording(model: model, error: error)
+                /// A task is used to free the mutex and avoid a deadlock in case an error happens immediately after trying to connect.
+                /// Without a task and calling processStreamCompleted inside this same thread will cause a deadlock.
+                Task { [weak self] in
+                    guard let self else { return }
+                    
+                    resetPluginState()
+                    onStreamConnecting()
+                    do {
+                        let serviceListener = createServiceListener(model: model)
+                        try await service.connect(listener: serviceListener)
+                    } catch {
+                        await forceStopRecording(model: model, error: error)
+                        await processStreamCompleted()
+                    }
                 }
             }
         }
@@ -174,10 +180,10 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
         isConnectionOpen = false
         isClosingConnection = false
         pluginError = nil
-        streamingBuffer.removeAll()
     }
 
     private func forceStopRecording(model: AttendiRecorderModel, error: Error) async {
+        pluginError = error
         await model.stop()
         await model.callbacks.invokeOnError(error)
     }
@@ -190,8 +196,6 @@ public final class AttendiAsyncTranscribePlugin: AttendiRecorderPlugin {
             isClosingConnection = true
 
             try? await service.disconnect()
-
-            streamingBuffer.removeAll()
         }
     }
 
