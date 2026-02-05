@@ -59,7 +59,7 @@ public struct AudioRecordingConfig {
         channel: AVAudioChannelCount = 1,
         commonFormat: AVAudioCommonFormat = .pcmFormatInt16,
         interleaved: Bool = false,
-        categoryOptions: AVAudioSession.CategoryOptions = [.allowBluetooth, .defaultToSpeaker, .mixWithOthers]
+        categoryOptions: AVAudioSession.CategoryOptions = [.allowBluetoothHFP, .defaultToSpeaker, .mixWithOthers]
     ) {
         self.sampleRate = sampleRate
         self.channel = channel
