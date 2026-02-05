@@ -1,7 +1,7 @@
 import AVFoundation
 
 /// Represents the current status of the audio recording permission.
-public enum RecordingPermissionStatus {
+@frozen public enum RecordingPermissionStatus {
     /// Permission was just granted by the user.
     case justGranted
 
@@ -24,7 +24,7 @@ public enum RecordingPermissionStatus {
 ///   will be called once the user has responded to the permission.
 public enum AudioPermissionVerifier {
 
-    static func requestMicrophonePermission(completion: @escaping (RecordingPermissionStatus) -> Void) {
+    public static func requestMicrophonePermission(completion: @escaping (RecordingPermissionStatus) -> Void) {
         let audioSession = AVAudioSession.sharedInstance()
         switch audioSession.recordPermission {
         case .granted:
@@ -42,7 +42,7 @@ public enum AudioPermissionVerifier {
         }
     }
 
-    static func hasGrantedAudioRecordingPermissions() async -> Bool {
+    public static func hasGrantedAudioRecordingPermissions() async -> Bool {
         await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
             AudioPermissionVerifier.requestMicrophonePermission { status in
                 if status == .denied {

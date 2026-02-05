@@ -4,7 +4,7 @@ files:
   outputs:
     templateName: structured-swift5
     params:
-        publicAccess: false
+        publicAccess: true
     output: Swiftgen/Files.swift
 
 strings:
