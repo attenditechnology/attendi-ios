@@ -10,7 +10,7 @@ public final class AttendiStopOnAudioFocusLossPlugin: AttendiRecorderPlugin {
 
     private var notificationCenter: NotificationCenter = .default
     private var isRecording = false
-    private var model: AttendiRecorderModel?
+    private weak var model: AttendiRecorderModel?
 
     public init() { }
 
@@ -52,7 +52,8 @@ public final class AttendiStopOnAudioFocusLossPlugin: AttendiRecorderPlugin {
         }
 
         if type == .began {
-            Task {
+            Task { [weak self] in
+                guard let self else { return }
                 await model?.stop()
             }
         }
