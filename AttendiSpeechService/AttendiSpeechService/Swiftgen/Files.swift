@@ -9,30 +9,30 @@ import Foundation
 
 // swiftlint:disable explicit_type_interface identifier_name
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
-internal enum Files {
+public enum Files {
   /// error_notification.mp3
-  internal static let errorNotificationMp3 = File(name: "error_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
+  public static let errorNotificationMp3 = File(name: "error_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
   /// start_notification.mp3
-  internal static let startNotificationMp3 = File(name: "start_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
+  public static let startNotificationMp3 = File(name: "start_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
   /// stop_notification.mp3
-  internal static let stopNotificationMp3 = File(name: "stop_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
+  public static let stopNotificationMp3 = File(name: "stop_notification", ext: "mp3", relativePath: "", mimeType: "audio/mpeg")
 }
 // swiftlint:enable explicit_type_interface identifier_name
 // swiftlint:enable nesting type_body_length type_name vertical_whitespace_opening_braces
 
 // MARK: - Implementation Details
 
-internal struct File {
-  internal let name: String
-  internal let ext: String?
-  internal let relativePath: String
-  internal let mimeType: String
+public struct File {
+  public let name: String
+  public let ext: String?
+  public let relativePath: String
+  public let mimeType: String
 
-  internal var url: URL {
+  public var url: URL {
     return url(locale: nil)
   }
 
-  internal func url(locale: Locale?) -> URL {
+  public func url(locale: Locale?) -> URL {
     let bundle = BundleToken.bundle
     let url = bundle.url(
       forResource: name,
@@ -47,11 +47,11 @@ internal struct File {
     return result
   }
 
-  internal var path: String {
+  public var path: String {
     return path(locale: nil)
   }
 
-  internal func path(locale: Locale?) -> String {
+  public func path(locale: Locale?) -> String {
     return url(locale: locale).path
   }
 }

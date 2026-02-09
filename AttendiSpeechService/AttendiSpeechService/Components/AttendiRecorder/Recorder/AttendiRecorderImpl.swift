@@ -70,7 +70,8 @@ final class AttendiRecorderImpl: AttendiRecorder {
         ///
         /// Wrapping in `Task` ensures that the start procedure can run independently of the synchronous
         /// callback, preventing self-deadlocks and preserving forward progress.
-        model.onStartCalled = {
+        model.onStartCalled = { [weak self] in
+            guard let self else { return }
             Task { [weak self] in
                 guard let self else { return }
                 await start()
@@ -79,14 +80,16 @@ final class AttendiRecorderImpl: AttendiRecorder {
 
         /// Wrapping in `Task` ensures that the stop procedure can run independently of the synchronous
         /// callback, preventing self-deadlocks and preserving forward progress.
-        model.onStopCalled = {
+        model.onStopCalled = { [weak self] in
+            guard let self else { return }
             Task { [weak self] in
                 guard let self else { return }
                 await stop()
             }
         }
 
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             for plugin in plugins {
                 await plugin.activate(model: model)
             }
@@ -199,6 +202,8 @@ final class AttendiRecorderImpl: AttendiRecorder {
             for plugin in plugins {
                 await plugin.deactivate(model: model)
             }
+
+            plugins.removeAll()
 
             recorderTask?.cancel()
             recorderTask = nil
