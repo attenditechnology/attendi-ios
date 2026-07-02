@@ -94,7 +94,21 @@ private func onButtonPressed() {
         }
     }
 }
+
+private func releaseRecorder() {
+    Task {
+        await recorder.release()
+    }
+}
 ```
+
+#### Recorder Resource Ownership and Cleanup
+
+Recorder instances and their associated plugins should be released by the same object that creates and owns them. The `AttendiMicrophone` component does **not** release the recorder it is given — it only deactivates the plugins it added itself. Releasing the recorder is the responsibility of the owner (typically the screen or its ViewModel).
+
+In the examples, recorder cleanup is performed from the owner's `deinit` (for the ViewModel-based screens) so that resources are released when the screen is removed and its ViewModel is deallocated. This approach is used for simplicity in the sample implementation.
+
+If a screen owns the recorder directly in a SwiftUI `View` (without a ViewModel), release it from `.onDisappear`. Check `OneMicrophoneSyncScreenView` for this pattern.
 
 ### AttendiMicrophone
 A SwiftUI view designed for audio capture using a visual microphone button. It integrates with an `AttendiRecorder` instance and supports plugin-driven behavior, visual feedback, and customization of appearance and interaction.
