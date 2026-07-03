@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6 - 2026-07-02]
+
+> ## ⚠️ BREAKING CHANGE — ACTION REQUIRED ⚠️
+>
+> **`AttendiMicrophone` no longer releases the recorder for you.**
+>
+> Previously, `AttendiMicrophoneViewModel` called `release()` on the recorder when it was
+> deallocated. As of this version it does not. If you upgrade **without updating your code**,
+> recorders passed to `AttendiMicrophone` will **never be released** and your app **will leak
+> memory, audio sessions, and threads**.
+>
+> **What you must do:** every object that creates a recorder must now call `release()` on it
+> when it is no longer needed (see the Migration Guide below). This applies to all recorders you
+> create with `AttendiRecorderFactory.create()`, whether or not they are used with
+> `AttendiMicrophone`.
+
+### Changed
+- Recorder resource ownership and cleanup responsibility has been moved to the object that creates the recorder instances.
+
+### Removed
+- Automatic recorder resource cleanup from `AttendiMicrophoneViewModel`. The component now only deactivates the plugins it added itself and no longer calls `release()` on the recorder.
+
+### Migration Guide
+- Ensure every object that owns a recorder explicitly calls `release()` on its recorder instances before they are deallocated.
+- For ViewModel-owned recorders, release from `deinit` (see `RecorderStreamingScreenViewModel`, `SoapScreenViewModel`, and `TwoMicrophonesStreamingScreenViewModel`).
+- For recorders owned directly by a SwiftUI `View`, release from `.onDisappear` (see `OneMicrophoneSyncScreenView`).
+
 ## [0.3.5 - 2026-02-05]
 ### Fixed
 - Memory leak caused by holding a strong reference inside `onStartCalled` and `onStopCalled` in `AttendiRecorderImpl` and by removing all the plugins on release.

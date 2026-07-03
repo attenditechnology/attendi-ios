@@ -52,6 +52,14 @@ struct OneMicrophoneSyncScreenView: View {
                 )
             }
         }
+        // This view owns the recorder, so it is responsible for releasing it.
+        // Releasing here (rather than relying on the view being deallocated) ensures the
+        // recorder resources are freed as soon as the screen goes away.
+        .onDisappear {
+            Task {
+                await recorder.release()
+            }
+        }
     }
 
     /// Avoid capturing `self` by copying the bindings, otherwise the recorder will leak.

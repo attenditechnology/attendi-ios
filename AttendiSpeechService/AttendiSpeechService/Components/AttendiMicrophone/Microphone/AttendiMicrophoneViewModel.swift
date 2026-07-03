@@ -149,14 +149,13 @@ final class AttendiMicrophoneViewModel: ObservableObject {
         }
     }
 
-    /// Cleans up plugins and recorder when ViewModel is deallocated.
+    /// Deactivates the microphone's own plugins when the ViewModel is deallocated.
     deinit {
         let recorder = self.recorder
         let microphoneVolumeFeedbackPlugin = self.microphoneVolumeFeedbackPlugin
 
         Task.detached(priority: .background) {
             await microphoneVolumeFeedbackPlugin?.deactivate(model: recorder.model)
-            await recorder.release()
         }
     }
 }

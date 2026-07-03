@@ -9,6 +9,14 @@ import Combine
 ///
 /// The `release()` method **must be called** when the recorder is no longer needed,
 /// to avoid resource leaks including audio session locks, memory consumption, or thread retention.
+///
+/// - Important: Whoever instantiates a recorder is always responsible for cleaning up its
+///   resources itself by calling `release()` when the recorder is no longer needed. Components
+///   that merely receive a recorder — such as `AttendiMicrophone` — do **not** release it, since
+///   they do not own its lifecycle. Releasing a recorder you did not create risks tearing it down
+///   while its owner still intends to use it, or double-releasing it. Typically the owner is the
+///   screen or ViewModel that created the recorder, which releases it from `deinit` (or, for a
+///   recorder owned directly by a SwiftUI `View`, from `.onDisappear`).
 public protocol AttendiRecorder {
 
     /// The core model containing callbacks and state update hooks used to drive plugin behavior.
