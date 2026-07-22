@@ -17,18 +17,37 @@ public struct TranscribeAsyncReplaceTextParameters: Equatable {
     }
 }
 
+/// Errors thrown by `TranscribeAsyncReplaceTextMapper`.
+public enum TranscribeAsyncReplaceTextError: Error, Equatable {
+    /// The start or end index exceeds the length of the string or falls on an invalid character boundary.
+    case indexOutOfBounds(startCharacterIndex: Int, endCharacterIndex: Int, textLength: Int)
+}
+
 public enum TranscribeAsyncReplaceTextMapper {
 
     /// Replaces a portion of the text between the given indices with new content.
     ///
     /// - Parameters:
     ///   - original: The original string.
-    ///   - action: The replace text action containing indices and replacement text.
+    ///   - params: The replace text parameters containing indices and replacement text.
     /// - Returns: A new string with the specified range replaced.
-    /// - Throws: An error if the indices are out of bounds.
+    /// - Throws: `TranscribeAsyncReplaceTextError.indexOutOfBounds` if either index exceeds the string length or falls on an invalid character boundary.
     public static func map(original: String, params: TranscribeAsyncReplaceTextParameters) throws -> String {
-        let startIndex = original.index(original.startIndex, offsetBy: params.startCharacterIndex)
-        let endIndex = original.index(original.startIndex, offsetBy: params.endCharacterIndex)
+        // The backend sends indices counted in UTF-16 code units, so we index
+        // via the utf16 view to stay in sync with the server's character offsets.
+        let utf16 = original.utf16
+        guard
+            let startUTF16Index = utf16.index(utf16.startIndex, offsetBy: params.startCharacterIndex, limitedBy: utf16.endIndex),
+            let endUTF16Index = utf16.index(utf16.startIndex, offsetBy: params.endCharacterIndex, limitedBy: utf16.endIndex),
+            let startIndex = startUTF16Index.samePosition(in: original),
+            let endIndex = endUTF16Index.samePosition(in: original)
+        else {
+            throw TranscribeAsyncReplaceTextError.indexOutOfBounds(
+                startCharacterIndex: params.startCharacterIndex,
+                endCharacterIndex: params.endCharacterIndex,
+                textLength: utf16.count
+            )
+        }
 
         return String(original[..<startIndex]) + params.text + String(original[endIndex...])
     }
